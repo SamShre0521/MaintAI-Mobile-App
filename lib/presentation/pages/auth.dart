@@ -1,7 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:maintai/domain/repositories/impl/assistantrepoimpl.dart';
+import 'package:maintai/domain/usecase/getMachines.dart';
+import 'package:maintai/presentation/bloc/assistant_chat_event.dart';
+import 'package:maintai/presentation/bloc/assitant_chat_bloc.dart';
 import 'package:maintai/presentation/bloc/auth_event.dart';
 import 'package:maintai/presentation/bloc/auth_state.dart';
+import 'package:maintai/presentation/pages/assistant_chat_page.dart';
 import '../bloc/auth_bloc.dart';
 
 class AuthPage extends StatefulWidget {
@@ -28,18 +33,15 @@ class _AuthPageState extends State<AuthPage> {
   void _submit() {
     if (isLogin) {
       context.read<AuthBloc>().add(
-            LoginEvent(
-              emailController.text.trim(),
-              passwordController.text.trim(),
-            ),
-          );
+        LoginEvent(emailController.text.trim(), passwordController.text.trim()),
+      );
     } else {
       context.read<AuthBloc>().add(
-            SignupEvent(
-              emailController.text.trim(),
-              passwordController.text.trim(),
-            ),
-          );
+        SignupEvent(
+          emailController.text.trim(),
+          passwordController.text.trim(),
+        ),
+      );
     }
   }
 
@@ -49,21 +51,49 @@ class _AuthPageState extends State<AuthPage> {
       backgroundColor: const Color(0xFFF5F6F8),
       body: SafeArea(
         child: BlocConsumer<AuthBloc, AuthState>(
-          listener: (context, state) {
+          // listener: (context, state) {
+          //   if (state is AuthSuccess) {
+          //     ScaffoldMessenger.of(context).showSnackBar(
+          //       SnackBar(content: Text(state.message)),
+          //     );
+          //   } else if (state is AuthFailure) {
+          //     ScaffoldMessenger.of(context).showSnackBar(
+          //       SnackBar(content: Text(state.error)),
+          //     );
+          //   }
+          // },
+          listener: (context, state) async{
             if (state is AuthSuccess) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text(state.message)),
+              ScaffoldMessenger.of(
+                context,
+              ).showSnackBar(SnackBar(content: Text(state.message)));
+              await Future.delayed(Duration(seconds: 2));
+
+
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => BlocProvider(
+                    create: (_) => AssistantChatBloc(
+                      GetMachines(AssistantRepositoryImpl()),
+                    )..add(LoadMachinesEvent()),
+                    child: const AssistantChatPage(),
+                  ),
+                ),
               );
             } else if (state is AuthFailure) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text(state.error)),
-              );
+              ScaffoldMessenger.of(
+                context,
+              ).showSnackBar(SnackBar(content: Text(state.error)));
             }
           },
           builder: (context, state) {
             return Center(
               child: SingleChildScrollView(
-                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 24,
+                  vertical: 20,
+                ),
                 child: ConstrainedBox(
                   constraints: const BoxConstraints(maxWidth: 420),
                   child: Column(
@@ -153,7 +183,12 @@ class _AuthPageState extends State<AuthPage> {
                               child: ElevatedButton(
                                 onPressed: _submit,
                                 style: ElevatedButton.styleFrom(
-                                  backgroundColor: const Color.fromARGB(255, 228, 213, 47),
+                                  backgroundColor: const Color.fromARGB(
+                                    255,
+                                    228,
+                                    213,
+                                    47,
+                                  ),
                                   foregroundColor: Colors.white,
                                   elevation: 4,
                                   shadowColor: const Color(0x332F6FE4),
@@ -256,14 +291,8 @@ class _AuthPageState extends State<AuthPage> {
         style: const TextStyle(fontSize: 18),
         decoration: InputDecoration(
           hintText: hintText,
-          hintStyle: const TextStyle(
-            color: Color(0xFF9CA3AF),
-            fontSize: 18,
-          ),
-          prefixIcon: Icon(
-            prefixIcon,
-            color: const Color(0xFF6B7280),
-          ),
+          hintStyle: const TextStyle(color: Color(0xFF9CA3AF), fontSize: 18),
+          prefixIcon: Icon(prefixIcon, color: const Color(0xFF6B7280)),
           suffixIcon: suffixIcon,
           border: InputBorder.none,
           contentPadding: const EdgeInsets.symmetric(vertical: 20),
