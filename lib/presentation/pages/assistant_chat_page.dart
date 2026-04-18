@@ -1,6 +1,9 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:flutter_markdown/flutter_markdown.dart';
+import 'package:maintai/ApiClient.dart';
 import 'package:maintai/presentation/pages/app_sidebar.dart';
+import 'package:maintai/storage/tokenStorage.dart';
 
 class AssistantChatPage extends StatefulWidget {
   const AssistantChatPage({super.key});
@@ -14,8 +17,11 @@ class _AssistantChatPageState extends State<AssistantChatPage>
   final TextEditingController issueController = TextEditingController();
   final ScrollController scrollController = ScrollController();
 
+  late final ApiClient apiClient;
+
   bool isExpanded = false;
   bool isAiTyping = false;
+  String? sessionId;
 
   String selectedMachine = 'Conveyor Belt A (CB-2021-A)';
   String? selectedImageName = 'machine_error_photo.jpg';
@@ -29,17 +35,25 @@ class _AssistantChatPageState extends State<AssistantChatPage>
 
   final List<_ChatMessage> messages = [
     _ChatMessage(
+      id: 'welcome-user',
       isUser: true,
       text: "Hello! I'm having an issue with one of the machines.",
       time: '6:33 PM',
     ),
     _ChatMessage(
+      id: 'welcome-ai',
       isUser: false,
       text:
           "I can help with that. Please select the machine and describe the issue. If possible, upload a photo too.",
       time: '6:33 PM',
     ),
   ];
+
+  @override
+  void initState() {
+    super.initState();
+    apiClient = ApiClient(TokenStorage());
+  }
 
   @override
   void dispose() {
@@ -59,6 +73,8 @@ class _AssistantChatPageState extends State<AssistantChatPage>
     });
   }
 
+  String _messageId() => DateTime.now().microsecondsSinceEpoch.toString();
+
   Future<void> _sendIssue() async {
     if (issueController.text.trim().isEmpty) return;
 
@@ -67,37 +83,74 @@ class _AssistantChatPageState extends State<AssistantChatPage>
     setState(() {
       messages.add(
         _ChatMessage(
+          id: _messageId(),
           isUser: true,
-          text: 'Machine: $selectedMachine\nIssue: $issueText',
+          text: sessionId == null
+              ? 'Machine: $selectedMachine\nIssue: $issueText'
+              : issueText,
           time: 'Now',
         ),
       );
+
       issueController.clear();
-      selectedImageName = null;
       isExpanded = false;
       isAiTyping = true;
     });
 
     _scrollToBottom();
 
-    await Future.delayed(const Duration(milliseconds: 700));
-
-    if (!mounted) return;
-
-    setState(() {
-      messages.add(
-        _ChatMessage(
-          isUser: false,
-          text:
-              'Got it. I have logged the issue for $selectedMachine. Based on your description, I recommend checking for overheating, loose alignment, friction at the rollers, and belt tension. Uploading an image next time can help me narrow it down faster.',
-          time: 'Now',
-          animateTyping: true,
-        ),
+    try {
+      final response = await apiClient.dio.post(
+        '/chat',
+        data: {
+          "message": issueText,
+          if (sessionId != null) "sessionId": sessionId,
+        },
       );
-      isAiTyping = false;
-    });
 
-    _scrollToBottom();
+      final data = response.data;
+
+      setState(() {
+        sessionId ??= data["sessionId"];
+
+        // messages.add(
+        //   _ChatMessage(
+        //     id: _messageId(),
+        //     isUser: false,
+        //     text: data["reply"] ?? "No reply received.",
+        //     time: 'Now',
+        //     animateTyping: true,
+        //   ),
+        // );
+        messages.add(
+  _ChatMessage(
+    id: _messageId(),
+    isUser: false,
+    text: data["reply"] ?? "No reply received.",
+    time: 'Now',
+    animateTyping: true,
+  ),
+);
+
+        isAiTyping = false;
+      });
+
+      _scrollToBottom();
+    } catch (e) {
+      setState(() {
+        messages.add(
+          _ChatMessage(
+            id: _messageId(),
+            isUser: false,
+            text: "Something went wrong. Please try again.",
+            time: 'Now',
+          ),
+        );
+        isAiTyping = false;
+      });
+
+      _scrollToBottom();
+    }
   }
 
   @override
@@ -159,16 +212,10 @@ class _AssistantChatPageState extends State<AssistantChatPage>
                   return Padding(
                     padding: const EdgeInsets.only(bottom: 14),
                     child: AnimatedMessageWrapper(
+                      key: ValueKey(msg.id),
                       child: msg.isUser
-                          ? _userBubble(
-                              text: msg.text,
-                              time: msg.time,
-                            )
-                          : _aiBubble(
-                              text: msg.text,
-                              time: msg.time,
-                              animateTyping: msg.animateTyping,
-                            ),
+                          ? _userBubble(text: msg.text, time: msg.time)
+                          : _aiBubble(message: msg),
                     ),
                   );
                 }
@@ -199,9 +246,7 @@ class _AssistantChatPageState extends State<AssistantChatPage>
           ),
           decoration: const BoxDecoration(
             color: Colors.white,
-            border: Border(
-              top: BorderSide(color: Color(0xFFE4DCC8)),
-            ),
+            border: Border(top: BorderSide(color: Color(0xFFE4DCC8))),
             boxShadow: [
               BoxShadow(
                 color: Color(0x14000000),
@@ -224,9 +269,11 @@ class _AssistantChatPageState extends State<AssistantChatPage>
                 ),
               );
             },
-            child: isExpanded
-                ? _expandedBottomCard(key: const ValueKey('expanded'))
-                : _compactBottomBar(key: const ValueKey('compact')),
+            child: sessionId == null
+                ? (isExpanded
+                    ? _expandedBottomCard(key: const ValueKey('expanded'))
+                    : _compactBottomBar(key: const ValueKey('compact')))
+                : _chatInputBar(),
           ),
         ),
       ),
@@ -336,80 +383,211 @@ class _AssistantChatPageState extends State<AssistantChatPage>
     );
   }
 
+  // Widget _aiBubble({
+  //   required _ChatMessage message,
+  // }) {
+  //   const bodyStyle = TextStyle(
+  //     fontSize: 16,
+  //     height: 1.45,
+  //     color: Color(0xFF2E2E2E),
+  //   );
+
+  //   return Align(
+  //     alignment: Alignment.centerLeft,
+  //     child: Row(
+  //       crossAxisAlignment: CrossAxisAlignment.start,
+  //       children: [
+  //         Container(
+  //           width: 42,
+  //           height: 42,
+  //           decoration: const BoxDecoration(
+  //             color: Colors.white,
+  //             shape: BoxShape.circle,
+  //             border: Border.fromBorderSide(
+  //               BorderSide(color: Color(0xFFE4DCC8)),
+  //             ),
+  //           ),
+  //           child: const Icon(
+  //             Icons.smart_toy_outlined,
+  //             color: Color(0xFF2E2E2E),
+  //             size: 22,
+  //           ),
+  //         ),
+  //         const SizedBox(width: 10),
+  //         Flexible(
+  //           child: Container(
+  //             padding: const EdgeInsets.fromLTRB(16, 14, 16, 10),
+  //             decoration: BoxDecoration(
+  //               color: Colors.white,
+  //               borderRadius: BorderRadius.circular(24),
+  //               border: Border.all(color: const Color(0xFFE4DCC8)),
+  //             ),
+  //             child: Column(
+  //               crossAxisAlignment: CrossAxisAlignment.start,
+  //               children: [
+  //                 message.animateTyping
+  //                     ? TypewriterText(
+  //                         key: ValueKey(message.id),
+  //                         text: message.text,
+  //                         style: bodyStyle,
+  //                         onCompleted: () {
+  //                           if (!mounted) return;
+  //                           setState(() {
+  //                             message.animateTyping = false;
+  //                           });
+  //                         },
+  //                       )
+  //                     : MarkdownBody(
+  //                         data: message.text,
+  //                         selectable: true,
+  //                         shrinkWrap: true,
+  //                         styleSheet: MarkdownStyleSheet(
+  //                           p: bodyStyle,
+  //                           h1: const TextStyle(
+  //                             fontSize: 22,
+  //                             fontWeight: FontWeight.w700,
+  //                             color: Color(0xFF2E2E2E),
+  //                           ),
+  //                           h2: const TextStyle(
+  //                             fontSize: 20,
+  //                             fontWeight: FontWeight.w700,
+  //                             color: Color(0xFF2E2E2E),
+  //                           ),
+  //                           h3: const TextStyle(
+  //                             fontSize: 18,
+  //                             fontWeight: FontWeight.w700,
+  //                             color: Color(0xFF2E2E2E),
+  //                           ),
+  //                           strong: const TextStyle(
+  //                             fontWeight: FontWeight.w700,
+  //                             color: Color(0xFF2E2E2E),
+  //                           ),
+  //                           listBullet: bodyStyle,
+  //                           blockquote: bodyStyle,
+  //                         ),
+  //                       ),
+  //                 const SizedBox(height: 6),
+  //                 Align(
+  //                   alignment: Alignment.bottomRight,
+  //                   child: Text(
+  //                     message.time,
+  //                     style: const TextStyle(
+  //                       fontSize: 12,
+  //                       color: Color(0xFF8D8D8D),
+  //                     ),
+  //                   ),
+  //                 ),
+  //               ],
+  //             ),
+  //           ),
+  //         ),
+  //       ],
+  //     ),
+  //   );
+  // }
+
   Widget _aiBubble({
-    required String text,
-    required String time,
-    bool animateTyping = false,
-  }) {
-    return Align(
-      alignment: Alignment.centerLeft,
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            width: 42,
-            height: 42,
-            decoration: const BoxDecoration(
-              color: Colors.white,
-              shape: BoxShape.circle,
-              border: Border.fromBorderSide(
-                BorderSide(color: Color(0xFFE4DCC8)),
-              ),
-            ),
-            child: const Icon(
-              Icons.smart_toy_outlined,
-              color: Color(0xFF2E2E2E),
-              size: 22,
+  required _ChatMessage message,
+}) {
+  return Align(
+    alignment: Alignment.centerLeft,
+    child: Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Container(
+          width: 42,
+          height: 42,
+          decoration: const BoxDecoration(
+            color: Colors.white,
+            shape: BoxShape.circle,
+            border: Border.fromBorderSide(
+              BorderSide(color: Color(0xFFE4DCC8)),
             ),
           ),
-          const SizedBox(width: 10),
-          Flexible(
-            child: Container(
-              padding: const EdgeInsets.fromLTRB(16, 14, 16, 10),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(24),
-                border: Border.all(color: const Color(0xFFE4DCC8)),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  animateTyping
-                      ? TypewriterText(
-                          text: text,
-                          style: const TextStyle(
+          child: const Icon(
+            Icons.smart_toy_outlined,
+            color: Color(0xFF2E2E2E),
+            size: 22,
+          ),
+        ),
+        const SizedBox(width: 10),
+        Flexible(
+          child: Container(
+            padding: const EdgeInsets.fromLTRB(16, 14, 16, 10),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(24),
+              border: Border.all(color: const Color(0xFFE4DCC8)),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                message.animateTyping
+                    ? TypewriterMarkdown(
+                        key: ValueKey(message.id),
+                        text: message.text,
+                        onCompleted: () {
+                          if (!mounted) return;
+                          setState(() {
+                            message.animateTyping = false;
+                          });
+                        },
+                      )
+                    : MarkdownBody(
+                        data: message.text,
+                        selectable: true,
+                        shrinkWrap: true,
+                        styleSheet: MarkdownStyleSheet(
+                          p: const TextStyle(
                             fontSize: 16,
                             height: 1.45,
                             color: Color(0xFF2E2E2E),
                           ),
-                        )
-                      : Text(
-                          text,
-                          style: const TextStyle(
+                          h1: const TextStyle(
+                            fontSize: 22,
+                            fontWeight: FontWeight.w700,
+                            color: Color(0xFF2E2E2E),
+                          ),
+                          h2: const TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.w700,
+                            color: Color(0xFF2E2E2E),
+                          ),
+                          h3: const TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.w700,
+                            color: Color(0xFF2E2E2E),
+                          ),
+                          strong: const TextStyle(
+                            fontWeight: FontWeight.w700,
+                            color: Color(0xFF2E2E2E),
+                          ),
+                          listBullet: const TextStyle(
                             fontSize: 16,
                             height: 1.45,
                             color: Color(0xFF2E2E2E),
                           ),
                         ),
-                  const SizedBox(height: 6),
-                  Align(
-                    alignment: Alignment.bottomRight,
-                    child: Text(
-                      time,
-                      style: const TextStyle(
-                        fontSize: 12,
-                        color: Color(0xFF8D8D8D),
                       ),
+                const SizedBox(height: 6),
+                Align(
+                  alignment: Alignment.bottomRight,
+                  child: Text(
+                    message.time,
+                    style: const TextStyle(
+                      fontSize: 12,
+                      color: Color(0xFF8D8D8D),
                     ),
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
           ),
-        ],
-      ),
-    );
-  }
+        ),
+      ],
+    ),
+  );
+}
 
   Widget _compactBottomBar({Key? key}) {
     return Row(
@@ -475,10 +653,7 @@ class _AssistantChatPageState extends State<AssistantChatPage>
             color: const Color(0xFFF1C84B),
             borderRadius: BorderRadius.circular(16),
           ),
-          child: const Icon(
-            Icons.send_rounded,
-            color: Colors.white,
-          ),
+          child: const Icon(Icons.send_rounded, color: Colors.white),
         ),
       ],
     );
@@ -672,15 +847,184 @@ class _AssistantChatPageState extends State<AssistantChatPage>
       ),
     );
   }
+
+  Widget _chatInputBar() {
+    return Row(
+      children: [
+        Expanded(
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 14),
+            decoration: BoxDecoration(
+              color: const Color(0xFFF8F6F1),
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: const Color(0xFFE4DCC8)),
+            ),
+            child: TextField(
+              controller: issueController,
+              decoration: const InputDecoration(
+                hintText: 'Type your message...',
+                border: InputBorder.none,
+              ),
+              onSubmitted: (_) => _sendIssue(),
+            ),
+          ),
+        ),
+        const SizedBox(width: 10),
+        GestureDetector(
+          onTap: _sendIssue,
+          child: Container(
+            width: 48,
+            height: 48,
+            decoration: BoxDecoration(
+              color: const Color(0xFFF1C84B),
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: const Icon(
+              Icons.send_rounded,
+              color: Colors.white,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class TypewriterMarkdown extends StatefulWidget {
+  final String text;
+  final VoidCallback? onCompleted;
+
+  const TypewriterMarkdown({
+    super.key,
+    required this.text,
+    this.onCompleted,
+  });
+
+  @override
+  State<TypewriterMarkdown> createState() => _TypewriterMarkdownState();
+}
+
+class _TypewriterMarkdownState extends State<TypewriterMarkdown> {
+  Timer? timer;
+  int currentIndex = 0;
+  late final List<int> breakpoints;
+
+  @override
+  void initState() {
+    super.initState();
+    breakpoints = _buildBreakpoints(widget.text);
+
+    timer = Timer.periodic(const Duration(milliseconds: 18), (timer) {
+      if (!mounted) return;
+
+      if (currentIndex < breakpoints.length - 1) {
+        setState(() {
+          currentIndex++;
+        });
+      } else {
+        timer.cancel();
+        widget.onCompleted?.call();
+      }
+    });
+  }
+
+  List<int> _buildBreakpoints(String text) {
+    final points = <int>[0];
+
+    for (int i = 1; i <= text.length; i++) {
+      final char = text[i - 1];
+
+      // reveal on spaces/newlines/punctuation instead of every char
+      if (char == ' ' ||
+          char == '\n' ||
+          char == '.' ||
+          char == ',' ||
+          char == ':' ||
+          char == ';' ||
+          char == '-') {
+        points.add(i);
+      }
+    }
+
+    if (points.last != text.length) {
+      points.add(text.length);
+    }
+
+    return points;
+  }
+
+  @override
+  void dispose() {
+    timer?.cancel();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final visibleText = widget.text.substring(0, breakpoints[currentIndex]);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        MarkdownBody(
+          data: visibleText,
+          selectable: true,
+          shrinkWrap: true,
+          styleSheet: MarkdownStyleSheet(
+            p: const TextStyle(
+              fontSize: 16,
+              height: 1.45,
+              color: Color(0xFF2E2E2E),
+            ),
+            h1: const TextStyle(
+              fontSize: 22,
+              fontWeight: FontWeight.w700,
+              color: Color(0xFF2E2E2E),
+            ),
+            h2: const TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.w700,
+              color: Color(0xFF2E2E2E),
+            ),
+            h3: const TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.w700,
+              color: Color(0xFF2E2E2E),
+            ),
+            strong: const TextStyle(
+              fontWeight: FontWeight.w700,
+              color: Color(0xFF2E2E2E),
+            ),
+            listBullet: const TextStyle(
+              fontSize: 16,
+              height: 1.45,
+              color: Color(0xFF2E2E2E),
+            ),
+          ),
+        ),
+        const SizedBox(height: 2),
+        const Text(
+          '▋',
+          style: TextStyle(
+            color: Color(0xFFF1C84B),
+            fontSize: 16,
+            height: 1.0,
+          ),
+        ),
+      ],
+    );
+  }
 }
 
 class _ChatMessage {
+  final String id;
   final bool isUser;
   final String text;
   final String time;
-  final bool animateTyping;
+  bool animateTyping;
 
   _ChatMessage({
+    required this.id,
     required this.isUser,
     required this.text,
     required this.time,
@@ -691,7 +1035,10 @@ class _ChatMessage {
 class AnimatedMessageWrapper extends StatefulWidget {
   final Widget child;
 
-  const AnimatedMessageWrapper({super.key, required this.child});
+  const AnimatedMessageWrapper({
+    super.key,
+    required this.child,
+  });
 
   @override
   State<AnimatedMessageWrapper> createState() => _AnimatedMessageWrapperState();
@@ -731,11 +1078,13 @@ class _AnimatedMessageWrapperState extends State<AnimatedMessageWrapper> {
 class TypewriterText extends StatefulWidget {
   final String text;
   final TextStyle style;
+  final VoidCallback? onCompleted;
 
   const TypewriterText({
     super.key,
     required this.text,
     required this.style,
+    this.onCompleted,
   });
 
   @override
@@ -759,6 +1108,7 @@ class _TypewriterTextState extends State<TypewriterText> {
         });
       } else {
         timer.cancel();
+        widget.onCompleted?.call();
       }
     });
   }
@@ -820,11 +1170,9 @@ class _TypingBubbleState extends State<_TypingBubble>
       animation: controller,
       builder: (context, child) {
         final progress = (controller.value - index * 0.15).clamp(0.0, 1.0);
-        final scale = 0.8 + (progress > 0 ? (1 - (progress - 0.5).abs() * 2) * 0.4 : 0);
-        return Transform.scale(
-          scale: scale,
-          child: child,
-        );
+        final scale =
+            0.8 + (progress > 0 ? (1 - (progress - 0.5).abs() * 2) * 0.4 : 0);
+        return Transform.scale(scale: scale, child: child);
       },
       child: Container(
         width: 8,
@@ -881,4 +1229,3 @@ class _TypingBubbleState extends State<_TypingBubble>
     );
   }
 }
-

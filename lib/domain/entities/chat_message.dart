@@ -1,10 +1,12 @@
-class ChatMessage {
+class _ChatMessage {
+  final String id;
   final bool isUser;
   final String text;
   final String time;
-  final bool animateTyping;
+  bool animateTyping;
 
-  const ChatMessage({
+  _ChatMessage({
+    required this.id,
     required this.isUser,
     required this.text,
     required this.time,
