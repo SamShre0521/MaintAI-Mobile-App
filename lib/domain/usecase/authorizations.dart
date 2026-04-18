@@ -18,7 +18,7 @@ class SignupUseCase {
 
   SignupUseCase(this.repository);
 
-  Future<User> call(String email, String password) {
-    return repository.signup(email, password);
+  Future<User> call(User user) {
+    return repository.signup(user);
   }
 }

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:maintai/domain/entities/user.dart';
 import 'package:maintai/domain/repositories/impl/assistantrepoimpl.dart';
 import 'package:maintai/domain/usecase/getMachines.dart';
 import 'package:maintai/presentation/bloc/assistant_chat_event.dart';
@@ -22,10 +23,12 @@ class _AuthPageState extends State<AuthPage> {
 
   final emailController = TextEditingController();
   final passwordController = TextEditingController();
+  final nameController = TextEditingController();
 
   @override
   void dispose() {
     emailController.dispose();
+    nameController.dispose();
     passwordController.dispose();
     super.dispose();
   }
@@ -38,8 +41,12 @@ class _AuthPageState extends State<AuthPage> {
     } else {
       context.read<AuthBloc>().add(
         SignupEvent(
+          User(
           emailController.text.trim(),
-          passwordController.text.trim(),
+          nameController.text.trim(),
+          'manager',
+          passwordController.text.trim()
+          )
         ),
       );
     }
@@ -51,17 +58,6 @@ class _AuthPageState extends State<AuthPage> {
       backgroundColor: const Color(0xFFF5F6F8),
       body: SafeArea(
         child: BlocConsumer<AuthBloc, AuthState>(
-          // listener: (context, state) {
-          //   if (state is AuthSuccess) {
-          //     ScaffoldMessenger.of(context).showSnackBar(
-          //       SnackBar(content: Text(state.message)),
-          //     );
-          //   } else if (state is AuthFailure) {
-          //     ScaffoldMessenger.of(context).showSnackBar(
-          //       SnackBar(content: Text(state.error)),
-          //     );
-          //   }
-          // },
           listener: (context, state) async{
             if (state is AuthSuccess) {
               ScaffoldMessenger.of(
@@ -143,7 +139,15 @@ class _AuthPageState extends State<AuthPage> {
                       ),
 
                       const SizedBox(height: 28),
+                      if(!isLogin) ...[
+                        _buildTextField(
+                          controller: nameController,
+                          hintText: 'Name',
+                          prefixIcon: Icons.person_outline,
+                        ),
 
+                        const SizedBox(height: 16),
+                    ],
                       _buildTextField(
                         controller: emailController,
                         hintText: 'Email',

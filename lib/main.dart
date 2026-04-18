@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:maintai/ApiClient.dart';
 import 'package:maintai/domain/repositories/impl/authrepoimpl.dart';
 import 'package:maintai/domain/usecase/authorizations.dart';
 import 'package:maintai/presentation/bloc/auth_bloc.dart';
 import 'package:maintai/presentation/pages/auth.dart';
+import 'package:maintai/storage/tokenStorage.dart';
 
-// Presentation
 void main() {
   runApp(const MyApp());
 }
@@ -15,7 +16,9 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final repository = Authrepoimpl();
+    final tokenStorage = TokenStorage();
+    final apiClient = ApiClient(tokenStorage);
+    final repository = Authrepoimpl(apiClient, tokenStorage);
 
     return MaterialApp(
       debugShowCheckedModeBanner: false,
@@ -23,7 +26,6 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         primarySwatch: Colors.blue,
       ),
-
       home: BlocProvider(
         create: (_) => AuthBloc(
           LoginUseCase(repository),

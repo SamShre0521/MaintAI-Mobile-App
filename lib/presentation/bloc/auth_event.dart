@@ -1,3 +1,5 @@
+import 'package:maintai/domain/entities/user.dart';
+
 abstract class AuthEvent {}
 
 class LoginEvent extends AuthEvent {
@@ -8,8 +10,7 @@ class LoginEvent extends AuthEvent {
 }
 
 class SignupEvent extends AuthEvent {
-  final String email;
-  final String password;
+  final User user;
 
-  SignupEvent(this.email, this.password);
+  SignupEvent(this.user);
 }

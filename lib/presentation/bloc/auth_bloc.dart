@@ -2,6 +2,7 @@
 
 
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:maintai/domain/entities/user.dart';
 import 'package:maintai/domain/usecase/authorizations.dart';
 import 'package:maintai/presentation/bloc/auth_event.dart';
 import 'package:maintai/presentation/bloc/auth_state.dart';
@@ -23,13 +24,13 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     });
 
     on<SignupEvent>((event, emit) async {
-      emit(AuthLoading());
-      try {
-        final user = await signupUseCase(event.email, event.password);
-        emit(AuthSuccess('Signup successful: ${user.email}'));
-      } catch (e) {
-        emit(AuthFailure('Signup failed: $e'));
-      }
-    });
+  emit(AuthLoading());
+  try {
+    final user = await signupUseCase(event.user);
+    emit(AuthSuccess('Signup successful: ${user.email}'));
+  } catch (e) {
+    emit(AuthFailure('Signup failed: $e'));
+  }
+});
   }
 }
