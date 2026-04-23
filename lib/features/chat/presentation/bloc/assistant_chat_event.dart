@@ -1,6 +1,6 @@
 abstract class AssistantChatEvent {}
 
-class LoadMachinesEvent extends AssistantChatEvent {}
+class InitializeChatEvent extends AssistantChatEvent {}
 
 class ToggleExpandedComposerEvent extends AssistantChatEvent {
   final bool isExpanded;
@@ -9,18 +9,18 @@ class ToggleExpandedComposerEvent extends AssistantChatEvent {
 }
 
 class SelectMachineEvent extends AssistantChatEvent {
-  final String machineId;
+  final String machine;
 
-  SelectMachineEvent(this.machineId);
+  SelectMachineEvent(this.machine);
 }
+
+class RemoveSelectedImageEvent extends AssistantChatEvent {}
 
 class PickImageEvent extends AssistantChatEvent {
   final String imageName;
 
   PickImageEvent(this.imageName);
 }
-
-class RemoveImageEvent extends AssistantChatEvent {}
 
 class SendChatMessageEvent extends AssistantChatEvent {
   final String message;

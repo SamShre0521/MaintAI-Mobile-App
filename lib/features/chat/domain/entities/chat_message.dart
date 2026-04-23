@@ -5,7 +5,7 @@ class ChatMessage {
   final String time;
   final bool animateTyping;
 
-  const ChatMessage({
+  ChatMessage({
     required this.id,
     required this.isUser,
     required this.text,

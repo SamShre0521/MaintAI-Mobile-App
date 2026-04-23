@@ -1,13 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:maintai/ApiClient.dart';
 import 'package:maintai/domain/entities/user.dart';
 import 'package:maintai/domain/repositories/impl/assistantrepoimpl.dart';
 import 'package:maintai/domain/usecase/getMachines.dart';
+import 'package:maintai/domain/usecase/sendChatMessage.dart';
+import 'package:maintai/features/chat/domain/usecases/send_chat_message.dart';
 import 'package:maintai/presentation/bloc/assistant_chat_event.dart';
 import 'package:maintai/presentation/bloc/assitant_chat_bloc.dart';
 import 'package:maintai/presentation/bloc/auth_event.dart';
 import 'package:maintai/presentation/bloc/auth_state.dart';
 import 'package:maintai/presentation/pages/assistant_chat_page.dart';
+import 'package:maintai/storage/tokenStorage.dart';
 import '../bloc/auth_bloc.dart';
 
 class AuthPage extends StatefulWidget {
@@ -64,19 +68,25 @@ class _AuthPageState extends State<AuthPage> {
                 context,
               ).showSnackBar(SnackBar(content: Text(state.message)));
               await Future.delayed(Duration(seconds: 2));
+        Navigator.pushReplacement(
+  context,
+  MaterialPageRoute(
+    builder: (_) => BlocProvider(
+      create: (_) {
+        final apiClient = ApiClient(TokenStorage());
+        final assistantRepository = AssistantRepositoryImpl(apiClient);
 
+        return AssistantChatBloc(
+          getMachines: GetMachines(assistantRepository),
+          sendChatMessage: SendChatMessage(assistantRepository),
+        )..add(LoadMachinesEvent());
+      },
+      child: const AssistantChatPage(),
+    ),
+  ),
+);
 
-              Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(
-                  builder: (_) => BlocProvider(
-                    create: (_) => AssistantChatBloc(
-                      GetMachines(AssistantRepositoryImpl()),
-                    )..add(LoadMachinesEvent()),
-                    child: const AssistantChatPage(),
-                  ),
-                ),
-              );
+         ;
             } else if (state is AuthFailure) {
               ScaffoldMessenger.of(
                 context,

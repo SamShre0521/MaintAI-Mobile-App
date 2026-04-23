@@ -9,8 +9,8 @@ class ApiClient {
       : dio = Dio(
           BaseOptions(
             baseUrl: 'https://maintai-backend-uat.onrender.com/api', // change if needed
-            connectTimeout: const Duration(seconds: 10),
-            receiveTimeout: const Duration(seconds: 10),
+            connectTimeout: const Duration(seconds: 60),
+            receiveTimeout: const Duration(seconds: 60),
             headers: {
               'Content-Type': 'application/json',
             },
