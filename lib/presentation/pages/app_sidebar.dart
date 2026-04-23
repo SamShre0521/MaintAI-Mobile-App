@@ -1,82 +1,34 @@
-// import 'package:flutter/material.dart';
-// import 'package:maintai/theme/app_colors.dart';
-
-// class AppSidebar extends StatelessWidget {
-//   const AppSidebar({super.key});
-
-//   @override
-//   Widget build(BuildContext context) {
-//     return Drawer(
-//       backgroundColor: AppColors1.surface,
-//       child: SafeArea(
-//         child: Column(
-//           children: [
-//             Container(
-//               width: double.infinity,
-//               padding: const EdgeInsets.all(20),
-//               decoration: const BoxDecoration(
-//                 color: AppColors1.yellowLight,
-//                 border: Border(
-//                   bottom: BorderSide(color: AppColors1.border),
-//                 ),
-//               ),
-//               child: const Row(
-//                 children: [
-//                   CircleAvatar(
-//                     radius: 24,
-//                     backgroundColor: AppColors1.yellowPrimary,
-//                     child: Icon(Icons.smart_toy_outlined, color: Colors.white),
-//                   ),
-//                   SizedBox(width: 12),
-//                   Expanded(
-//                     child: Text(
-//                       'MaintAI',
-//                       style: TextStyle(
-//                         fontSize: 20,
-//                         fontWeight: FontWeight.w700,
-//                         color: AppColors1.primaryText,
-//                       ),
-//                     ),
-//                   ),
-//                 ],
-//               ),
-//             ),
-//             _tile(Icons.chat_bubble_outline, 'New Chat'),
-//             _tile(Icons.precision_manufacturing_outlined, 'Machines'),
-//             _tile(Icons.report_problem_outlined, 'Issue History'),
-//             _tile(Icons.image_outlined, 'Uploads'),
-//             _tile(Icons.settings_outlined, 'Settings'),
-//             const Spacer(),
-//             const Divider(color: AppColors1.border),
-//             _tile(Icons.logout, 'Logout'),
-//             const SizedBox(height: 8),
-//           ],
-//         ),
-//       ),
-//     );
-//   }
-
-//   static Widget _tile(IconData icon, String title) {
-//     return ListTile(
-//       leading: Icon(icon, color: AppColors1.icon),
-//       title: Text(
-//         title,
-//         style: const TextStyle(
-//           color: AppColors1.primaryText,
-//           fontWeight: FontWeight.w500,
-//         ),
-//       ),
-//       onTap: () {},
-//     );
-//   }
-// }
-
-
-
 import 'package:flutter/material.dart';
 
+class ChatHistoryItem {
+  final String sessionId;
+  final String title;
+
+  const ChatHistoryItem({
+    required this.sessionId,
+    required this.title,
+  });
+}
+
 class AppSidebar extends StatelessWidget {
-  const AppSidebar({super.key});
+  final List<ChatHistoryItem> historyItems;
+  final VoidCallback onNewChat;
+  final void Function(String sessionId) onSelectHistory;
+  final VoidCallback onMachines;
+  final VoidCallback onUploads;
+  final VoidCallback onSettings;
+  final VoidCallback onLogout;
+
+  const AppSidebar({
+    super.key,
+    required this.historyItems,
+    required this.onNewChat,
+    required this.onSelectHistory,
+    required this.onMachines,
+    required this.onUploads,
+    required this.onSettings,
+    required this.onLogout,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -113,21 +65,105 @@ class AppSidebar extends StatelessWidget {
                 ],
               ),
             ),
-            _tile(Icons.chat_bubble_outline, 'New Chat'),
-            _tile(Icons.precision_manufacturing_outlined, 'Machines'),
-            _tile(Icons.report_problem_outlined, 'Issue History'),
-            _tile(Icons.image_outlined, 'Uploads'),
-            _tile(Icons.settings_outlined, 'Settings'),
+            _tile(
+              icon: Icons.chat_bubble_outline,
+              title: 'New Chat',
+              onTap: onNewChat,
+            ),
+            _tile(
+              icon: Icons.precision_manufacturing_outlined,
+              title: 'Machines',
+              onTap: onMachines,
+            ),
+            Theme(
+              data: Theme.of(context).copyWith(
+                dividerColor: Colors.transparent,
+              ),
+              child: ExpansionTile(
+                leading: const Icon(
+                  Icons.report_problem_outlined,
+                  color: Color(0xFF666666),
+                ),
+                title: const Text(
+                  'Issue History',
+                  style: TextStyle(
+                    fontSize: 16,
+                    color: Color(0xFF2E2E2E),
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+                childrenPadding: const EdgeInsets.only(left: 16, right: 8),
+                children: historyItems.isEmpty
+                    ? const [
+                        Padding(
+                          padding: EdgeInsets.only(
+                            left: 16,
+                            right: 16,
+                            bottom: 12,
+                          ),
+                          child: Align(
+                            alignment: Alignment.centerLeft,
+                            child: Text(
+                              'No previous chats',
+                              style: TextStyle(
+                                color: Color(0xFF8D8D8D),
+                                fontSize: 14,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ]
+                    : historyItems.map((item) {
+                        return ListTile(
+                          dense: true,
+                          contentPadding: const EdgeInsets.only(left: 16),
+                          leading: const Icon(
+                            Icons.history,
+                            size: 18,
+                            color: Color(0xFF8D8D8D),
+                          ),
+                          title: Text(
+                            item.title,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(
+                              fontSize: 14,
+                              color: Color(0xFF2E2E2E),
+                            ),
+                          ),
+                          onTap: () => onSelectHistory(item.sessionId),
+                        );
+                      }).toList(),
+              ),
+            ),
+            _tile(
+              icon: Icons.image_outlined,
+              title: 'Uploads',
+              onTap: onUploads,
+            ),
+            _tile(
+              icon: Icons.settings_outlined,
+              title: 'Settings',
+              onTap: onSettings,
+            ),
             const Spacer(),
             const Divider(),
-            _tile(Icons.logout, 'Logout'),
+            _tile(
+              icon: Icons.logout,
+              title: 'Logout',
+              onTap: onLogout,
+            ),
           ],
         ),
       ),
     );
   }
 
-  static Widget _tile(IconData icon, String title) {
+  static Widget _tile({
+    required IconData icon,
+    required String title,
+    required VoidCallback onTap,
+  }) {
     return ListTile(
       leading: Icon(icon, color: const Color(0xFF666666)),
       title: Text(
@@ -138,7 +174,7 @@ class AppSidebar extends StatelessWidget {
           fontWeight: FontWeight.w500,
         ),
       ),
-      onTap: () {},
+      onTap: onTap,
     );
   }
 }
