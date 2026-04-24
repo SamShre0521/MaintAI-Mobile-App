@@ -14,6 +14,12 @@ import 'package:maintai/presentation/widgets/user_message_bubble.dart';
 import 'package:maintai/presentation/widgets/ai_message_bubble.dart';
 import 'package:maintai/presentation/widgets/compact_bottom_bar.dart';
 import 'package:maintai/presentation/widgets/expanded_issue_card.dart';
+import 'package:maintai/storage/tokenStorage.dart';
+import 'package:maintai/ApiClient.dart';
+import 'package:maintai/domain/repositories/impl/authrepoimpl.dart';
+import 'package:maintai/domain/usecase/authorizations.dart';
+import 'package:maintai/presentation/bloc/auth_bloc.dart';
+import 'package:maintai/presentation/pages/auth.dart';
 
 class AssistantChatPage extends StatefulWidget {
   const AssistantChatPage({super.key});
@@ -25,6 +31,29 @@ class AssistantChatPage extends StatefulWidget {
 class _AssistantChatPageState extends State<AssistantChatPage> {
   final TextEditingController issueController = TextEditingController();
   final ScrollController scrollController = ScrollController();
+
+  String userName = '';
+String userRole = '';
+
+@override
+void initState() {
+  super.initState();
+  _loadUserInfo();
+}
+
+Future<void> _loadUserInfo() async {
+  final storage = TokenStorage();
+
+  final name = await storage.getUserName();
+  final role = await storage.getUserRole();
+
+  if (!mounted) return;
+
+  setState(() {
+    userName = name ?? '';
+    userRole = role ?? '';
+  });
+}
 
   @override
   void dispose() {
@@ -60,15 +89,67 @@ class _AssistantChatPageState extends State<AssistantChatPage> {
         _scrollToBottom();
 
         if (state.errorMessage != null && state.errorMessage!.isNotEmpty) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(state.errorMessage!)),
-          );
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text(state.errorMessage!)));
         }
       },
       builder: (context, state) {
         return Scaffold(
           backgroundColor: const Color(0xFFF8F6F1),
-          drawer: const AppSidebar(),
+          drawer: AppSidebar(
+            userName: userName,
+            userRole: userRole,
+            historyItems: state.sessions
+                .map(
+                  (session) => ChatHistoryItem(
+                    sessionId: session.sessionId,
+                    title: session.title,
+                  ),
+                )
+                .toList(),
+            onNewChat: () {
+              Navigator.pop(context);
+              context.read<AssistantChatBloc>().add(StartNewChatEvent());
+            },
+            onSelectHistory: (sessionId) {
+              Navigator.pop(context);
+              context.read<AssistantChatBloc>().add(
+                LoadSessionMessagesEvent(sessionId),
+              );
+            },
+            onMachines: () {
+              Navigator.pop(context);
+            },
+            onUploads: () {
+              Navigator.pop(context);
+            },
+            onSettings: () {
+              Navigator.pop(context);
+            },
+            onLogout: () async {
+              await TokenStorage().clearToken();
+
+              if (!context.mounted) return;
+
+              Navigator.of(context).pushAndRemoveUntil(
+                MaterialPageRoute(
+                  builder: (_) => BlocProvider(
+                    create: (_) => AuthBloc(
+                      LoginUseCase(
+                        Authrepoimpl(ApiClient(TokenStorage()), TokenStorage()),
+                      ),
+                      SignupUseCase(
+                        Authrepoimpl(ApiClient(TokenStorage()), TokenStorage()),
+                      ),
+                    ),
+                    child: const AuthPage(),
+                  ),
+                ),
+                (route) => false,
+              );
+            },
+          ),
           appBar: AppBar(
             backgroundColor: const Color(0xFFF8F6F1),
             elevation: 0,
@@ -109,7 +190,8 @@ class _AssistantChatPageState extends State<AssistantChatPage> {
                 child: ListView.builder(
                   controller: scrollController,
                   padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
-                  itemCount: state.messages.length + 2 + (state.isAiTyping ? 1 : 0),
+                  itemCount:
+                      state.messages.length + 2 + (state.isAiTyping ? 1 : 0),
                   itemBuilder: (context, index) {
                     if (index == 0) {
                       return Column(
@@ -138,15 +220,16 @@ class _AssistantChatPageState extends State<AssistantChatPage> {
                                   message: msg,
                                   onTypingCompleted: () {
                                     context.read<AssistantChatBloc>().add(
-                                          FinishTypingAnimationEvent(msg.id),
-                                        );
+                                      FinishTypingAnimationEvent(msg.id),
+                                    );
                                   },
                                 ),
                         ),
                       );
                     }
 
-                    if (state.isAiTyping && adjustedIndex == state.messages.length) {
+                    if (state.isAiTyping &&
+                        adjustedIndex == state.messages.length) {
                       return const Padding(
                         padding: EdgeInsets.only(bottom: 14),
                         child: const TypingBubble(),
@@ -172,9 +255,7 @@ class _AssistantChatPageState extends State<AssistantChatPage> {
               ),
               decoration: const BoxDecoration(
                 color: Colors.white,
-                border: Border(
-                  top: BorderSide(color: Color(0xFFE4DCC8)),
-                ),
+                border: Border(top: BorderSide(color: Color(0xFFE4DCC8))),
                 boxShadow: [
                   BoxShadow(
                     color: Color(0x14000000),
@@ -191,10 +272,7 @@ class _AssistantChatPageState extends State<AssistantChatPage> {
                   return SizeTransition(
                     sizeFactor: animation,
                     axisAlignment: -1,
-                    child: FadeTransition(
-                      opacity: animation,
-                      child: child,
-                    ),
+                    child: FadeTransition(opacity: animation, child: child),
                   );
                 },
                 // child: state.sessionId == null
@@ -210,24 +288,22 @@ class _AssistantChatPageState extends State<AssistantChatPage> {
                 //         key: const ValueKey('chat'),
                 //       ),
                 child: state.sessionId == null
-    ? (state.isExpanded
-        ? ExpandedIssueCard(
-            key: const ValueKey('expanded'),
-            state: state,
-            controller: issueController,
-            onSend: _sendMessage,
-          )
-        : CompactBottomBar(
-            key: const ValueKey('compact'),
-            onExpand: () {
-              context.read<AssistantChatBloc>().add(
-                    ToggleExpandedComposerEvent(true),
-                  );
-            },
-          ))
-    : _chatInputBar(
-        key: const ValueKey('chat'),
-      ),
+                    ? (state.isExpanded
+                          ? ExpandedIssueCard(
+                              key: const ValueKey('expanded'),
+                              state: state,
+                              controller: issueController,
+                              onSend: _sendMessage,
+                            )
+                          : CompactBottomBar(
+                              key: const ValueKey('compact'),
+                              onExpand: () {
+                                context.read<AssistantChatBloc>().add(
+                                  ToggleExpandedComposerEvent(true),
+                                );
+                              },
+                            ))
+                    : _chatInputBar(key: const ValueKey('chat')),
               ),
             ),
           ),
@@ -235,6 +311,7 @@ class _AssistantChatPageState extends State<AssistantChatPage> {
       },
     );
   }
+
   Widget _label(String text) {
     return Align(
       alignment: Alignment.centerLeft,
@@ -281,14 +358,10 @@ class _AssistantChatPageState extends State<AssistantChatPage> {
               color: const Color(0xFFF1C84B),
               borderRadius: BorderRadius.circular(16),
             ),
-            child: const Icon(
-              Icons.send_rounded,
-              color: Colors.white,
-            ),
+            child: const Icon(Icons.send_rounded, color: Colors.white),
           ),
         ),
       ],
     );
   }
 }
-

@@ -1,5 +1,6 @@
 import 'package:maintai/domain/entities/chat_message.dart';
 import 'package:maintai/domain/entities/machines.dart';
+import 'package:maintai/domain/entities/chat_session.dart';
 
 class AssistantChatState {
   final bool isLoading;
@@ -11,6 +12,8 @@ class AssistantChatState {
   final String? imageName;
   final String? errorMessage;
   final List<ChatMessage> messages;
+  final bool isSessionLoading;
+  final List<ChatSession> sessions;
 
   const AssistantChatState({
     this.isLoading = false,
@@ -36,6 +39,8 @@ class AssistantChatState {
         time: '6:33 PM',
       ),
     ],
+    this.isSessionLoading = false,
+    this.sessions = const [],
   });
 
   AssistantChatState copyWith({
@@ -50,6 +55,8 @@ class AssistantChatState {
     List<ChatMessage>? messages,
     bool clearImage = false,
     bool clearError = false,
+    bool? isSessionLoading,
+    List<ChatSession>? sessions,
   }) {
     return AssistantChatState(
       isLoading: isLoading ?? this.isLoading,
@@ -61,6 +68,8 @@ class AssistantChatState {
       imageName: clearImage ? null : (imageName ?? this.imageName),
       errorMessage: clearError ? null : (errorMessage ?? this.errorMessage),
       messages: messages ?? this.messages,
+      isSessionLoading: isSessionLoading ?? this.isSessionLoading,
+      sessions: sessions ?? this.sessions,
     );
   }
 }

@@ -2,6 +2,8 @@ import 'package:maintai/ApiClient.dart';
 import 'package:maintai/domain/entities/chat_response.dart';
 import 'package:maintai/domain/entities/machines.dart';
 import 'package:maintai/domain/repositories/assistantrepo.dart';
+import 'package:maintai/domain/entities/chat_message.dart';
+import 'package:maintai/domain/entities/chat_session.dart';
 
 class AssistantRepositoryImpl implements AssistantRepository {
   final ApiClient apiClient;
@@ -41,4 +43,32 @@ class AssistantRepositoryImpl implements AssistantRepository {
       reply: data['reply'] ?? '',
     );
   }
+
+  @override
+Future<List<ChatSession>> getSessions() async {
+  final response = await apiClient.dio.get('/sessions');
+
+  final List sessions = response.data['sessions'] ?? [];
+
+  return sessions
+      .map((json) => ChatSession.fromJson(json))
+      .toList();
+}
+
+@override
+Future<List<ChatMessage>> getSessionMessages(String sessionId) async {
+  final response = await apiClient.dio.get('/sessions/$sessionId/messages');
+
+  final List messages = response.data['messages'] ?? [];
+
+  return messages.map((json) {
+    return ChatMessage(
+      id: json['_id'] ?? DateTime.now().microsecondsSinceEpoch.toString(),
+      isUser: json['role'] == 'user',
+      text: json['content'] ?? '',
+      time: 'History',
+      animateTyping: false,
+    );
+  }).toList();
+}
 }

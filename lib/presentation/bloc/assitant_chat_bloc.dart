@@ -5,14 +5,19 @@ import 'package:maintai/domain/usecase/getMachines.dart';
 import 'package:maintai/domain/usecase/sendChatMessage.dart';
 import 'assistant_chat_event.dart';
 import 'assistant_chat_state.dart';
+import 'package:maintai/domain/usecase/getSessions.dart';
+import 'package:maintai/domain/usecase/getSessionMessages.dart';
 
 class AssistantChatBloc extends Bloc<AssistantChatEvent, AssistantChatState> {
   final GetMachines getMachines;
   final SendChatMessage sendChatMessage;
-
+  final GetSessions getSessions;
+final GetSessionMessages getSessionMessages;
   AssistantChatBloc({
     required this.getMachines,
     required this.sendChatMessage,
+     required this.getSessions,
+  required this.getSessionMessages,
   }) : super(const AssistantChatState()) {
     on<LoadMachinesEvent>(_onLoadMachines);
     on<ToggleExpandedComposerEvent>(_onToggleExpanded);
@@ -22,6 +27,9 @@ class AssistantChatBloc extends Bloc<AssistantChatEvent, AssistantChatState> {
     on<SendChatMessageEvent>(_onSendChatMessage);
     on<FinishTypingAnimationEvent>(_onFinishTypingAnimation);
     on<StartNewChatEvent>(_onStartNewChat);
+    on<LoadSessionsEvent>(_onLoadSessions);
+on<LoadSessionMessagesEvent>(_onLoadSessionMessages);
+    
   }
 
   Future<void> _onLoadMachines(
@@ -129,12 +137,14 @@ class AssistantChatBloc extends Bloc<AssistantChatEvent, AssistantChatState> {
         time: 'Now',
         animateTyping: true,
       );
+      final  updatedSessions = await getSessions();
 
       emit(
         state.copyWith(
           sessionId: state.sessionId ?? response.sessionId,
           messages: [...state.messages, userMessage, aiMessage],
           isAiTyping: false,
+          sessions: updatedSessions,
           clearError: true,
         ),
       );
@@ -178,7 +188,64 @@ class AssistantChatBloc extends Bloc<AssistantChatEvent, AssistantChatState> {
       AssistantChatState(
         machines: state.machines,
         selectedMachine: state.machines.isNotEmpty ? state.machines.first : null,
+        sessions: state.sessions, // ✅ keep issue history
+      isSessionLoading: state.isSessionLoading,
       ),
     );
   }
+
+
+  Future<void> _onLoadSessions(
+  LoadSessionsEvent event,
+  Emitter<AssistantChatState> emit,
+) async {
+  emit(state.copyWith(isSessionLoading: true, clearError: true));
+
+  try {
+    final sessions = await getSessions();
+
+    emit(
+      state.copyWith(
+        isSessionLoading: false,
+        sessions: await getSessions(),
+        clearError: true,
+      ),
+    );
+  } catch (_) {
+    emit(
+      state.copyWith(
+        isSessionLoading: false,
+        errorMessage: 'Failed to load issue history',
+      ),
+    );
+  }
+}
+
+Future<void> _onLoadSessionMessages(
+  LoadSessionMessagesEvent event,
+  Emitter<AssistantChatState> emit,
+) async {
+  emit(state.copyWith(isAiTyping: true, clearError: true));
+
+  try {
+    final messages = await getSessionMessages(event.sessionId);
+
+    emit(
+      state.copyWith(
+        sessionId: event.sessionId,
+        messages: messages,
+        isExpanded: false,
+        isAiTyping: false,
+        clearError: true,
+      ),
+    );
+  } catch (_) {
+    emit(
+      state.copyWith(
+        isAiTyping: false,
+        errorMessage: 'Failed to load chat messages',
+      ),
+    );
+  }
+}
 }

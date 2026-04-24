@@ -19,7 +19,11 @@ class Authrepoimpl implements Authrepo {
         data: {"email": email, "password": password},
       );
        final token = response.data["token"];
+       final userName = response.data["user"]["name"];
+       final userRole = response.data["user"]["role"];
       await tokenStorage.saveToken(token);
+      await tokenStorage.saveUserName(userName);
+      await tokenStorage.saveUserRole(userRole);
       return User(
         response.data["user"]["email"] ?? "",
         response.data["user"]["name"] ?? "",

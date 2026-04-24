@@ -13,6 +13,8 @@ import 'package:maintai/presentation/bloc/auth_state.dart';
 import 'package:maintai/presentation/pages/assistant_chat_page.dart';
 import 'package:maintai/storage/tokenStorage.dart';
 import '../bloc/auth_bloc.dart';
+import 'package:maintai/domain/usecase/getSessions.dart';
+import 'package:maintai/domain/usecase/getSessionMessages.dart';
 
 class AuthPage extends StatefulWidget {
   const AuthPage({super.key});
@@ -46,11 +48,11 @@ class _AuthPageState extends State<AuthPage> {
       context.read<AuthBloc>().add(
         SignupEvent(
           User(
-          emailController.text.trim(),
-          nameController.text.trim(),
-          'manager',
-          passwordController.text.trim()
-          )
+            emailController.text.trim(),
+            nameController.text.trim(),
+            'manager',
+            passwordController.text.trim(),
+          ),
         ),
       );
     }
@@ -62,31 +64,39 @@ class _AuthPageState extends State<AuthPage> {
       backgroundColor: const Color(0xFFF5F6F8),
       body: SafeArea(
         child: BlocConsumer<AuthBloc, AuthState>(
-          listener: (context, state) async{
+          listener: (context, state) async {
             if (state is AuthSuccess) {
               ScaffoldMessenger.of(
                 context,
               ).showSnackBar(SnackBar(content: Text(state.message)));
               await Future.delayed(Duration(seconds: 2));
-        Navigator.pushReplacement(
-  context,
-  MaterialPageRoute(
-    builder: (_) => BlocProvider(
-      create: (_) {
-        final apiClient = ApiClient(TokenStorage());
-        final assistantRepository = AssistantRepositoryImpl(apiClient);
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => BlocProvider(
+                    create: (_) {
+                      final apiClient = ApiClient(TokenStorage());
+                      final assistantRepository = AssistantRepositoryImpl(
+                        apiClient,
+                      );
 
-        return AssistantChatBloc(
-          getMachines: GetMachines(assistantRepository),
-          sendChatMessage: SendChatMessage(assistantRepository),
-        )..add(LoadMachinesEvent());
-      },
-      child: const AssistantChatPage(),
-    ),
-  ),
-);
+                      return AssistantChatBloc(
+                          getMachines: GetMachines(assistantRepository),
+                          sendChatMessage: SendChatMessage(assistantRepository),
+                          getSessions: GetSessions(assistantRepository),
+                          getSessionMessages: GetSessionMessages(
+                            assistantRepository,
+                          ),
+                        )
+                        ..add(LoadMachinesEvent())
+                        ..add(LoadSessionsEvent());
+                    },
+                    child: const AssistantChatPage(),
+                  ),
+                ),
+              );
 
-         ;
+              ;
             } else if (state is AuthFailure) {
               ScaffoldMessenger.of(
                 context,
@@ -149,7 +159,7 @@ class _AuthPageState extends State<AuthPage> {
                       ),
 
                       const SizedBox(height: 28),
-                      if(!isLogin) ...[
+                      if (!isLogin) ...[
                         _buildTextField(
                           controller: nameController,
                           hintText: 'Name',
@@ -157,7 +167,7 @@ class _AuthPageState extends State<AuthPage> {
                         ),
 
                         const SizedBox(height: 16),
-                    ],
+                      ],
                       _buildTextField(
                         controller: emailController,
                         hintText: 'Email',
