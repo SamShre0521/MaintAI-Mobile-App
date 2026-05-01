@@ -14,6 +14,9 @@ class AssistantChatState {
   final List<ChatMessage> messages;
   final bool isSessionLoading;
   final List<ChatSession> sessions;
+  final bool showResolutionPrompt;
+  final bool isIssueResolved;
+  final bool isHistoryMode;
 
   const AssistantChatState({
     this.isLoading = false,
@@ -24,6 +27,9 @@ class AssistantChatState {
     this.selectedMachine,
     this.imageName,
     this.errorMessage,
+    this.showResolutionPrompt = false,
+    this.isHistoryMode = false,
+    this.isIssueResolved = false,
     this.messages = const [
       ChatMessage(
         id: 'welcome-user',
@@ -57,6 +63,9 @@ class AssistantChatState {
     bool clearError = false,
     bool? isSessionLoading,
     List<ChatSession>? sessions,
+    bool? showResolutionPrompt,
+    bool? isIssueResolved,
+    bool? isHistoryMode,
   }) {
     return AssistantChatState(
       isLoading: isLoading ?? this.isLoading,
@@ -70,6 +79,9 @@ class AssistantChatState {
       messages: messages ?? this.messages,
       isSessionLoading: isSessionLoading ?? this.isSessionLoading,
       sessions: sessions ?? this.sessions,
+      showResolutionPrompt: showResolutionPrompt ?? this.showResolutionPrompt,
+      isIssueResolved: isIssueResolved ?? this.isIssueResolved,
+      isHistoryMode: isHistoryMode ?? this.isHistoryMode,
     );
   }
 }

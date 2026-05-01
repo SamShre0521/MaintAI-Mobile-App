@@ -36,6 +36,7 @@ class FinishTypingAnimationEvent extends AssistantChatEvent {
 
 class StartNewChatEvent extends AssistantChatEvent {}
 
+
 class LoadSessionsEvent extends AssistantChatEvent {}
 
 class LoadSessionMessagesEvent extends AssistantChatEvent {
@@ -43,3 +44,6 @@ class LoadSessionMessagesEvent extends AssistantChatEvent {
 
   LoadSessionMessagesEvent(this.sessionId);
 }
+class MarkIssueResolvedEvent extends AssistantChatEvent {}
+
+class ContinueIssueEvent extends AssistantChatEvent {}

@@ -1,13 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:maintai/domain/entities/chat_message.dart';
 import 'package:maintai/presentation/bloc/assistant_chat_event.dart';
 import 'package:maintai/presentation/bloc/assistant_chat_state.dart';
 import 'package:maintai/presentation/bloc/assitant_chat_bloc.dart';
 import 'package:maintai/presentation/pages/app_sidebar.dart';
 import 'package:maintai/presentation/widgets/animated_message_wrapper.dart';
-import 'package:maintai/presentation/widgets/typewriter_markdown_widget.dart';
 import 'package:maintai/presentation/widgets/typing_bubble_widget.dart';
 import 'package:maintai/presentation/widgets/welcome_widget.dart';
 import 'package:maintai/presentation/widgets/user_message_bubble.dart';
@@ -20,6 +18,9 @@ import 'package:maintai/domain/repositories/impl/authrepoimpl.dart';
 import 'package:maintai/domain/usecase/authorizations.dart';
 import 'package:maintai/presentation/bloc/auth_bloc.dart';
 import 'package:maintai/presentation/pages/auth.dart';
+import 'package:maintai/presentation/widgets/issue_resolution_prompt.dart';
+import 'package:maintai/presentation/widgets/issue_resolved_footer.dart';
+import 'package:maintai/presentation/widgets/history_mode_footer.dart';
 
 class AssistantChatPage extends StatefulWidget {
   const AssistantChatPage({super.key});
@@ -33,27 +34,33 @@ class _AssistantChatPageState extends State<AssistantChatPage> {
   final ScrollController scrollController = ScrollController();
 
   String userName = '';
-String userRole = '';
+  String userRole = '';
 
-@override
-void initState() {
-  super.initState();
-  _loadUserInfo();
+  @override
+  void initState() {
+    super.initState();
+    _loadUserInfo();
+  }
+void _startNewChat() {
+  issueController.clear();
+  FocusScope.of(context).unfocus();
+
+  context.read<AssistantChatBloc>().add(StartNewChatEvent());
 }
 
-Future<void> _loadUserInfo() async {
-  final storage = TokenStorage();
+  Future<void> _loadUserInfo() async {
+    final storage = TokenStorage();
 
-  final name = await storage.getUserName();
-  final role = await storage.getUserRole();
+    final name = await storage.getUserName();
+    final role = await storage.getUserRole();
 
-  if (!mounted) return;
+    if (!mounted) return;
 
-  setState(() {
-    userName = name ?? '';
-    userRole = role ?? '';
-  });
-}
+    setState(() {
+      userName = name ?? '';
+      userRole = role ?? '';
+    });
+  }
 
   @override
   void dispose() {
@@ -191,7 +198,10 @@ Future<void> _loadUserInfo() async {
                   controller: scrollController,
                   padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
                   itemCount:
-                      state.messages.length + 2 + (state.isAiTyping ? 1 : 0),
+                      state.messages.length +
+                      2 +
+                      (state.isAiTyping ? 1 : 0) +
+                      (state.showResolutionPrompt ? 1 : 0),
                   itemBuilder: (context, index) {
                     if (index == 0) {
                       return Column(
@@ -235,6 +245,24 @@ Future<void> _loadUserInfo() async {
                         child: const TypingBubble(),
                       );
                     }
+                    final promptIndex =
+                        state.messages.length + (state.isAiTyping ? 1 : 0);
+
+                    if (state.showResolutionPrompt &&
+                        adjustedIndex == promptIndex) {
+                      return IssueResolutionPrompt(
+                        onResolved: () {
+                          context.read<AssistantChatBloc>().add(
+                            MarkIssueResolvedEvent(),
+                          );
+                        },
+                        onNotResolved: () {
+                          context.read<AssistantChatBloc>().add(
+                            ContinueIssueEvent(),
+                          );
+                        },
+                      );
+                    }
 
                     return const SizedBox(height: 90);
                   },
@@ -275,35 +303,63 @@ Future<void> _loadUserInfo() async {
                     child: FadeTransition(opacity: animation, child: child),
                   );
                 },
-                // child: state.sessionId == null
+                child: state.isHistoryMode
+    ?  HistoryModeFooter(
+        onNewChat: _startNewChat,
+      )
+    : state.isIssueResolved
+        ? IssueResolvedFooter(
+            onNewChat: _startNewChat,
+          )
+        : state.sessionId == null
+            ? (state.isExpanded
+                ? ExpandedIssueCard(
+                    key: const ValueKey('expanded'),
+                    state: state,
+                    controller: issueController,
+                    onSend: _sendMessage,
+                  )
+                : CompactBottomBar(
+                    key: const ValueKey('compact'),
+                    onExpand: () {
+                      context.read<AssistantChatBloc>().add(
+                            ToggleExpandedComposerEvent(true),
+                          );
+                    },
+                  ))
+            : state.showResolutionPrompt
+                ? const SizedBox(
+                    key: ValueKey('waiting-resolution'),
+                    height: 0,
+                  )
+                : _chatInputBar(
+                    key: const ValueKey('chat'),
+                  ),
+                // child: state.isIssueResolved
+                //     ? IssueResolvedFooter(onNewChat: _startNewChat)
+                //     : state.sessionId == null
                 //     ? (state.isExpanded
-                //         ? _expandedBottomCard(
-                //             key: const ValueKey('expanded'),
-                //             state: state,
-                //           )
-                //         : _compactBottomBar(
-                //             key: const ValueKey('compact'),
-                //           ))
-                //     : _chatInputBar(
-                //         key: const ValueKey('chat'),
-                //       ),
-                child: state.sessionId == null
-                    ? (state.isExpanded
-                          ? ExpandedIssueCard(
-                              key: const ValueKey('expanded'),
-                              state: state,
-                              controller: issueController,
-                              onSend: _sendMessage,
-                            )
-                          : CompactBottomBar(
-                              key: const ValueKey('compact'),
-                              onExpand: () {
-                                context.read<AssistantChatBloc>().add(
-                                  ToggleExpandedComposerEvent(true),
-                                );
-                              },
-                            ))
-                    : _chatInputBar(key: const ValueKey('chat')),
+                //           ? ExpandedIssueCard(
+                //               key: const ValueKey('expanded'),
+                //               state: state,
+                //               controller: issueController,
+                //               onSend: _sendMessage,
+                //             )
+                //           : CompactBottomBar(
+                //               key: const ValueKey('compact'),
+                //               onExpand: () {
+                //                 context.read<AssistantChatBloc>().add(
+                //                   ToggleExpandedComposerEvent(true),
+                //                 );
+                //               },
+                //             ))
+                //     : state.showResolutionPrompt
+                //     ? const SizedBox(
+                //         key: ValueKey('waiting-resolution'),
+                //         height: 0,
+                //       )
+                //     : _chatInputBar(key: const ValueKey('chat')),
+              
               ),
             ),
           ),

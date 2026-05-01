@@ -12,12 +12,12 @@ class AssistantChatBloc extends Bloc<AssistantChatEvent, AssistantChatState> {
   final GetMachines getMachines;
   final SendChatMessage sendChatMessage;
   final GetSessions getSessions;
-final GetSessionMessages getSessionMessages;
+  final GetSessionMessages getSessionMessages;
   AssistantChatBloc({
     required this.getMachines,
     required this.sendChatMessage,
-     required this.getSessions,
-  required this.getSessionMessages,
+    required this.getSessions,
+    required this.getSessionMessages,
   }) : super(const AssistantChatState()) {
     on<LoadMachinesEvent>(_onLoadMachines);
     on<ToggleExpandedComposerEvent>(_onToggleExpanded);
@@ -28,8 +28,36 @@ final GetSessionMessages getSessionMessages;
     on<FinishTypingAnimationEvent>(_onFinishTypingAnimation);
     on<StartNewChatEvent>(_onStartNewChat);
     on<LoadSessionsEvent>(_onLoadSessions);
-on<LoadSessionMessagesEvent>(_onLoadSessionMessages);
-    
+    on<LoadSessionMessagesEvent>(_onLoadSessionMessages);
+    on<MarkIssueResolvedEvent>(_onMarkIssueResolved);
+    on<ContinueIssueEvent>(_onContinueIssue);
+  }
+
+  void _onMarkIssueResolved(
+    MarkIssueResolvedEvent event,
+    Emitter<AssistantChatState> emit,
+  ) {
+    emit(
+      state.copyWith(
+        isIssueResolved: true,
+        showResolutionPrompt: false,
+        isExpanded: false,
+        clearError: true,
+      ),
+    );
+  }
+
+  void _onContinueIssue(
+    ContinueIssueEvent event,
+    Emitter<AssistantChatState> emit,
+  ) {
+    emit(
+      state.copyWith(
+        isIssueResolved: false,
+        showResolutionPrompt: false,
+        clearError: true,
+      ),
+    );
   }
 
   Future<void> _onLoadMachines(
@@ -80,10 +108,7 @@ on<LoadSessionMessagesEvent>(_onLoadSessionMessages);
     }
   }
 
-  void _onPickImage(
-    PickImageEvent event,
-    Emitter<AssistantChatState> emit,
-  ) {
+  void _onPickImage(PickImageEvent event, Emitter<AssistantChatState> emit) {
     emit(state.copyWith(imageName: event.imageName, clearError: true));
   }
 
@@ -137,7 +162,7 @@ on<LoadSessionMessagesEvent>(_onLoadSessionMessages);
         time: 'Now',
         animateTyping: true,
       );
-      final  updatedSessions = await getSessions();
+      final updatedSessions = await getSessions();
 
       emit(
         state.copyWith(
@@ -145,7 +170,10 @@ on<LoadSessionMessagesEvent>(_onLoadSessionMessages);
           messages: [...state.messages, userMessage, aiMessage],
           isAiTyping: false,
           sessions: updatedSessions,
+          showResolutionPrompt: true,
+          isIssueResolved: false,
           clearError: true,
+          isHistoryMode: false,
         ),
       );
     } catch (e) {
@@ -180,72 +208,96 @@ on<LoadSessionMessagesEvent>(_onLoadSessionMessages);
     emit(state.copyWith(messages: updatedMessages, clearError: true));
   }
 
-  void _onStartNewChat(
-    StartNewChatEvent event,
-    Emitter<AssistantChatState> emit,
-  ) {
-    emit(
-      AssistantChatState(
-        machines: state.machines,
-        selectedMachine: state.machines.isNotEmpty ? state.machines.first : null,
-        sessions: state.sessions, // ✅ keep issue history
+//   void _onStartNewChat(
+//   StartNewChatEvent event,
+//   Emitter<AssistantChatState> emit,
+// ) {
+//   emit(
+//     AssistantChatState(
+//       machines: state.machines,
+//       selectedMachine: state.machines.isNotEmpty ? state.machines.first : null,
+//       sessions: state.sessions,
+//       isSessionLoading: state.isSessionLoading,
+//       showResolutionPrompt: false,
+//       isIssueResolved: false,
+//       isExpanded: false,
+//       isAiTyping: false,
+//       sessionId: null,
+//     ),
+//   );
+// }
+
+void _onStartNewChat(
+  StartNewChatEvent event,
+  Emitter<AssistantChatState> emit,
+) {
+  emit(
+    AssistantChatState(
+      machines: state.machines,
+      selectedMachine: state.machines.isNotEmpty ? state.machines.first : null,
+      sessions: state.sessions,
       isSessionLoading: state.isSessionLoading,
-      ),
-    );
-  }
-
-
+      showResolutionPrompt: false,
+      isIssueResolved: false,
+      isExpanded: false,
+      isAiTyping: false,
+      sessionId: null,
+      isHistoryMode: false,
+    ),
+  );
+}
   Future<void> _onLoadSessions(
-  LoadSessionsEvent event,
-  Emitter<AssistantChatState> emit,
-) async {
-  emit(state.copyWith(isSessionLoading: true, clearError: true));
+    LoadSessionsEvent event,
+    Emitter<AssistantChatState> emit,
+  ) async {
+    emit(state.copyWith(isSessionLoading: true, clearError: true));
 
-  try {
-    final sessions = await getSessions();
+    try {
+      final sessions = await getSessions();
 
-    emit(
-      state.copyWith(
-        isSessionLoading: false,
-        sessions: await getSessions(),
-        clearError: true,
-      ),
-    );
-  } catch (_) {
-    emit(
-      state.copyWith(
-        isSessionLoading: false,
-        errorMessage: 'Failed to load issue history',
-      ),
-    );
+      emit(
+        state.copyWith(
+          isSessionLoading: false,
+          sessions: await getSessions(),
+          clearError: true,
+        ),
+      );
+    } catch (_) {
+      emit(
+        state.copyWith(
+          isSessionLoading: false,
+          errorMessage: 'Failed to load issue history',
+        ),
+      );
+    }
   }
-}
 
-Future<void> _onLoadSessionMessages(
-  LoadSessionMessagesEvent event,
-  Emitter<AssistantChatState> emit,
-) async {
-  emit(state.copyWith(isAiTyping: true, clearError: true));
+  Future<void> _onLoadSessionMessages(
+    LoadSessionMessagesEvent event,
+    Emitter<AssistantChatState> emit,
+  ) async {
+    emit(state.copyWith(isAiTyping: true, clearError: true));
 
-  try {
-    final messages = await getSessionMessages(event.sessionId);
+    try {
+      final messages = await getSessionMessages(event.sessionId);
 
-    emit(
-      state.copyWith(
-        sessionId: event.sessionId,
-        messages: messages,
-        isExpanded: false,
-        isAiTyping: false,
-        clearError: true,
-      ),
-    );
-  } catch (_) {
-    emit(
-      state.copyWith(
-        isAiTyping: false,
-        errorMessage: 'Failed to load chat messages',
-      ),
-    );
+      emit(
+        state.copyWith(
+          sessionId: event.sessionId,
+          messages: messages,
+          isExpanded: false,
+          isAiTyping: false,
+          clearError: true,
+          isHistoryMode: true,
+        ),
+      );
+    } catch (_) {
+      emit(
+        state.copyWith(
+          isAiTyping: false,
+          errorMessage: 'Failed to load chat messages',
+        ),
+      );
+    }
   }
-}
 }
