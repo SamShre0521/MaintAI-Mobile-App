@@ -1,10 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:maintai/domain/entities/chat_message.dart';
+import 'package:maintai/domain/repositories/impl/managerrepoimpl.dart';
+import 'package:maintai/domain/usecase/approve_Feedback.dart';
+import 'package:maintai/domain/usecase/getPendingFeedbacks.dart';
+import 'package:maintai/domain/usecase/reject_Feedback.dart';
 import 'package:maintai/presentation/bloc/assistant_chat_event.dart';
 import 'package:maintai/presentation/bloc/assistant_chat_state.dart';
 import 'package:maintai/presentation/bloc/assitant_chat_bloc.dart';
+import 'package:maintai/presentation/bloc/manager_dashboard_bloc.dart';
+import 'package:maintai/presentation/bloc/manager_dashboard_event.dart';
 import 'package:maintai/presentation/pages/app_sidebar.dart';
+import 'package:maintai/presentation/pages/manager_dashboard.dart';
 import 'package:maintai/presentation/widgets/animated_message_wrapper.dart';
 import 'package:maintai/presentation/widgets/typing_bubble_widget.dart';
 import 'package:maintai/presentation/widgets/welcome_widget.dart';
@@ -104,59 +111,149 @@ void _startNewChat() {
       builder: (context, state) {
         return Scaffold(
           backgroundColor: const Color(0xFFF8F6F1),
+          // drawer: AppSidebar(
+          //   userName: userName,
+          //   userRole: userRole,
+          //   historyItems: state.sessions
+          //       .map(
+          //         (session) => ChatHistoryItem(
+          //           sessionId: session.sessionId,
+          //           title: session.title,
+          //         ),
+          //       )
+          //       .toList(),
+          //   onNewChat: () {
+          //     Navigator.pop(context);
+          //     context.read<AssistantChatBloc>().add(StartNewChatEvent());
+          //   },
+          //   onSelectHistory: (sessionId) {
+          //     Navigator.pop(context);
+          //     context.read<AssistantChatBloc>().add(
+          //       LoadSessionMessagesEvent(sessionId),
+          //     );
+          //   },
+          //   onMachines: () {
+          //     Navigator.pop(context);
+          //   },
+          //   onUploads: () {
+          //     Navigator.pop(context);
+          //   },
+          //   onSettings: () {
+          //     Navigator.pop(context);
+          //   },
+          //   onLogout: () async {
+          //     await TokenStorage().clearToken();
+
+          //     if (!context.mounted) return;
+
+          //     Navigator.of(context).pushAndRemoveUntil(
+          //       MaterialPageRoute(
+          //         builder: (_) => BlocProvider(
+          //           create: (_) => AuthBloc(
+          //             LoginUseCase(
+          //               Authrepoimpl(ApiClient(TokenStorage()), TokenStorage()),
+          //             ),
+          //             SignupUseCase(
+          //               Authrepoimpl(ApiClient(TokenStorage()), TokenStorage()),
+          //             ),
+          //           ),
+          //           child: const AuthPage(),
+          //         ),
+          //       ),
+          //       (route) => false,
+          //     );
+          //   },
+          // ),
           drawer: AppSidebar(
-            userName: userName,
-            userRole: userRole,
-            historyItems: state.sessions
-                .map(
-                  (session) => ChatHistoryItem(
-                    sessionId: session.sessionId,
-                    title: session.title,
-                  ),
-                )
-                .toList(),
-            onNewChat: () {
-              Navigator.pop(context);
-              context.read<AssistantChatBloc>().add(StartNewChatEvent());
-            },
-            onSelectHistory: (sessionId) {
-              Navigator.pop(context);
-              context.read<AssistantChatBloc>().add(
-                LoadSessionMessagesEvent(sessionId),
-              );
-            },
-            onMachines: () {
-              Navigator.pop(context);
-            },
-            onUploads: () {
-              Navigator.pop(context);
-            },
-            onSettings: () {
-              Navigator.pop(context);
-            },
-            onLogout: () async {
-              await TokenStorage().clearToken();
+  userName: userName,
+  userRole: userRole,
+  historyItems: state.sessions
+      .map(
+        (session) => ChatHistoryItem(
+          sessionId: session.sessionId,
+          title: session.title,
+        ),
+      )
+      .toList(),
 
-              if (!context.mounted) return;
+  onNewChat: () {
+    final bloc = context.read<AssistantChatBloc>();
+    Navigator.of(context).pop();
+    bloc.add(StartNewChatEvent());
+    issueController.clear();
+    FocusScope.of(context).unfocus();
+  },
 
-              Navigator.of(context).pushAndRemoveUntil(
-                MaterialPageRoute(
-                  builder: (_) => BlocProvider(
-                    create: (_) => AuthBloc(
-                      LoginUseCase(
-                        Authrepoimpl(ApiClient(TokenStorage()), TokenStorage()),
-                      ),
-                      SignupUseCase(
-                        Authrepoimpl(ApiClient(TokenStorage()), TokenStorage()),
-                      ),
-                    ),
-                    child: const AuthPage(),
-                  ),
-                ),
-                (route) => false,
-              );
-            },
-          ),
+  onManagerDashboard: userRole.toLowerCase() == 'manager'
+      ? () {
+          Navigator.pop(context);
+
+          final tokenStorage = TokenStorage();
+          final apiClient = ApiClient(tokenStorage);
+          final managerRepository = ManagerRepositoryImpl(apiClient);
+
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(
+              builder: (_) => BlocProvider(
+                create: (_) => ManagerDashboardBloc(
+                  getPendingFeedbacks: GetPendingFeedbacks(managerRepository),
+                  approveFeedback: ApproveFeedback(managerRepository),
+                  rejectFeedback: RejectFeedback(managerRepository),
+                )..add(LoadManagerDashboardEvent()),
+                child: const ManagerDashboardPage(),
+              ),
+            ),
+          );
+        }
+      : null,
+
+  onSelectHistory: (sessionId) {
+    Navigator.of(context).pop();
+    context.read<AssistantChatBloc>().add(
+          LoadSessionMessagesEvent(sessionId),
+        );
+  },
+
+  onMachines: () {
+    Navigator.of(context).pop();
+  },
+
+  onUploads: () {
+    Navigator.of(context).pop();
+  },
+
+  onSettings: () {
+    Navigator.of(context).pop();
+  },
+
+  onLogout: () async {
+    Navigator.of(context).pop();
+
+    await TokenStorage().clearToken();
+
+    if (!context.mounted) return;
+
+    Navigator.of(context).pushAndRemoveUntil(
+      MaterialPageRoute(
+        builder: (_) => BlocProvider(
+          create: (_) {
+            final tokenStorage = TokenStorage();
+            final apiClient = ApiClient(tokenStorage);
+            final repository = Authrepoimpl(apiClient, tokenStorage);
+
+            return AuthBloc(
+              LoginUseCase(repository),
+              SignupUseCase(repository),
+            );
+          },
+          child: const AuthPage(),
+        ),
+      ),
+      (route) => false,
+    );
+  },
+),
           appBar: AppBar(
             backgroundColor: const Color(0xFFF8F6F1),
             elevation: 0,

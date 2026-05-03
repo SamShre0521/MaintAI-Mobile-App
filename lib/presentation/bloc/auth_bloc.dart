@@ -17,7 +17,8 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       emit(AuthLoading());
       try {
         final user = await loginUseCase(event.email, event.password);
-        emit(AuthSuccess('Login successful: ${user.email}'));
+        // emit(AuthSuccess('Login successful: ${user.email}'));
+        emit(AuthSuccess(user));
       } catch (e) {
         emit(AuthFailure('Login failed: $e'));
       }
@@ -27,7 +28,8 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
   emit(AuthLoading());
   try {
     final user = await signupUseCase(event.user);
-    emit(AuthSuccess('Signup successful: ${user.email}'));
+    // emit(AuthSuccess('Signup successful: ${user.email}'));
+    emit(AuthSuccess(user));
   } catch (e) {
     emit(AuthFailure('Signup failed: $e'));
   }

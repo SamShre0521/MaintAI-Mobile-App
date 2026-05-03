@@ -17,6 +17,7 @@ class AppSidebar extends StatelessWidget {
   final VoidCallback onLogout;
   final String userName;
   final String userRole;
+  final VoidCallback? onManagerDashboard;
 
   const AppSidebar({
     super.key,
@@ -29,6 +30,7 @@ class AppSidebar extends StatelessWidget {
     required this.onLogout,
     required this.userName,
     required this.userRole,
+    this.onManagerDashboard,
   });
 
   @override
@@ -110,6 +112,13 @@ class AppSidebar extends StatelessWidget {
               child: SingleChildScrollView(
                 child: Column(
                   children: [
+                    if (userRole.toLowerCase() == 'manager' &&
+                        onManagerDashboard != null)
+                      _tile(
+                        icon: Icons.dashboard_rounded,
+                        title: 'Manager Dashboard',
+                        onTap: onManagerDashboard!,
+                      ),
                     _tile(
                       icon: Icons.chat_bubble_outline,
                       title: 'New Chat',

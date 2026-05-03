@@ -3,14 +3,21 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:maintai/ApiClient.dart';
 import 'package:maintai/domain/entities/user.dart';
 import 'package:maintai/domain/repositories/impl/assistantrepoimpl.dart';
+import 'package:maintai/domain/repositories/impl/managerrepoimpl.dart';
+import 'package:maintai/domain/usecase/approve_Feedback.dart';
 import 'package:maintai/domain/usecase/getMachines.dart';
+import 'package:maintai/domain/usecase/getPendingFeedbacks.dart';
+import 'package:maintai/domain/usecase/reject_Feedback.dart';
 import 'package:maintai/domain/usecase/sendChatMessage.dart';
 import 'package:maintai/features/chat/domain/usecases/send_chat_message.dart';
 import 'package:maintai/presentation/bloc/assistant_chat_event.dart';
 import 'package:maintai/presentation/bloc/assitant_chat_bloc.dart';
 import 'package:maintai/presentation/bloc/auth_event.dart';
 import 'package:maintai/presentation/bloc/auth_state.dart';
+import 'package:maintai/presentation/bloc/manager_dashboard_bloc.dart';
+import 'package:maintai/presentation/bloc/manager_dashboard_event.dart';
 import 'package:maintai/presentation/pages/assistant_chat_page.dart';
+import 'package:maintai/presentation/pages/manager_dashboard.dart';
 import 'package:maintai/storage/tokenStorage.dart';
 import '../bloc/auth_bloc.dart';
 import 'package:maintai/domain/usecase/getSessions.dart';
@@ -65,42 +72,91 @@ class _AuthPageState extends State<AuthPage> {
       body: SafeArea(
         child: BlocConsumer<AuthBloc, AuthState>(
           listener: (context, state) async {
+            // if (state is AuthSuccess) {
+            //   ScaffoldMessenger.of(
+            //     context,
+            //   ).showSnackBar(SnackBar(content: Text("Login successful: ${state.user.email}")));
+            //   await Future.delayed(Duration(seconds: 2));
+            //   Navigator.pushReplacement(
+            //     context,
+            //     MaterialPageRoute(
+            //       builder: (_) => BlocProvider(
+            //         create: (_) {
+            //           final apiClient = ApiClient(TokenStorage());
+            //           final assistantRepository = AssistantRepositoryImpl(
+            //             apiClient,
+            //           );
+
+            //           return AssistantChatBloc(
+            //               getMachines: GetMachines(assistantRepository),
+            //               sendChatMessage: SendChatMessage(assistantRepository),
+            //               getSessions: GetSessions(assistantRepository),
+            //               getSessionMessages: GetSessionMessages(
+            //                 assistantRepository,
+            //               ),
+            //             )
+            //             ..add(LoadMachinesEvent())
+            //             ..add(LoadSessionsEvent());
+            //         },
+            //         child: const AssistantChatPage(),
+            //       ),
+            //     ),
+            //   );
+
+            //   ;
+            // } else if (state is AuthFailure) {
+            //   ScaffoldMessenger.of(
+            //     context,
+            //   ).showSnackBar(SnackBar(content: Text(state.error)));
+            // }
+
             if (state is AuthSuccess) {
-              ScaffoldMessenger.of(
-                context,
-              ).showSnackBar(SnackBar(content: Text(state.message)));
-              await Future.delayed(Duration(seconds: 2));
-              Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(
-                  builder: (_) => BlocProvider(
-                    create: (_) {
-                      final apiClient = ApiClient(TokenStorage());
-                      final assistantRepository = AssistantRepositoryImpl(
-                        apiClient,
-                      );
+              final tokenStorage = TokenStorage();
+              final apiClient = ApiClient(tokenStorage);
 
-                      return AssistantChatBloc(
-                          getMachines: GetMachines(assistantRepository),
-                          sendChatMessage: SendChatMessage(assistantRepository),
-                          getSessions: GetSessions(assistantRepository),
-                          getSessionMessages: GetSessionMessages(
-                            assistantRepository,
-                          ),
-                        )
-                        ..add(LoadMachinesEvent())
-                        ..add(LoadSessionsEvent());
-                    },
-                    child: const AssistantChatPage(),
+              if (state.user.role.toLowerCase() == 'manager') {
+                final managerRepository = ManagerRepositoryImpl(apiClient);
+
+                Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => BlocProvider(
+                      create: (_) => ManagerDashboardBloc(
+                        getPendingFeedbacks: GetPendingFeedbacks(
+                          managerRepository,
+                        ),
+                        approveFeedback: ApproveFeedback(managerRepository),
+                        rejectFeedback: RejectFeedback(managerRepository),
+                      )..add(LoadManagerDashboardEvent()),
+                      child: const ManagerDashboardPage(),
+                    ),
                   ),
-                ),
-              );
+                );
+              } else {
+                final assistantRepository = AssistantRepositoryImpl(apiClient);
 
-              ;
-            } else if (state is AuthFailure) {
-              ScaffoldMessenger.of(
-                context,
-              ).showSnackBar(SnackBar(content: Text(state.error)));
+                Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => BlocProvider(
+                      create: (_) =>
+                          AssistantChatBloc(
+                              getMachines: GetMachines(assistantRepository),
+                              sendChatMessage: SendChatMessage(
+                                assistantRepository,
+                              ),
+                              getSessions: GetSessions(assistantRepository),
+                              getSessionMessages: GetSessionMessages(
+                                assistantRepository,
+                              ),
+                            )
+                            ..add(LoadMachinesEvent())
+                            ..add(LoadSessionsEvent()),
+                      child: const AssistantChatPage(),
+                    ),
+                  ),
+                );
+              }
             }
           },
           builder: (context, state) {
