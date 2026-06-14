@@ -345,21 +345,37 @@ void _startNewChat() {
                     final promptIndex =
                         state.messages.length + (state.isAiTyping ? 1 : 0);
 
+                    // if (state.showResolutionPrompt &&
+                    //     adjustedIndex == promptIndex) {
+                    //   return IssueResolutionPrompt(
+                    //     onResolved: () {
+                    //       context.read<AssistantChatBloc>().add(
+                    //         MarkIssueResolvedEvent(),
+                    //       );
+                    //     },
+                    //     onNotResolved: () {
+                    //       context.read<AssistantChatBloc>().add(
+                    //         ContinueIssueEvent(),
+                    //       );
+                    //     },
+                    //   );
+                    // }
+
                     if (state.showResolutionPrompt &&
-                        adjustedIndex == promptIndex) {
-                      return IssueResolutionPrompt(
-                        onResolved: () {
-                          context.read<AssistantChatBloc>().add(
-                            MarkIssueResolvedEvent(),
-                          );
-                        },
-                        onNotResolved: () {
-                          context.read<AssistantChatBloc>().add(
-                            ContinueIssueEvent(),
-                          );
-                        },
-                      );
-                    }
+    adjustedIndex == promptIndex) {
+  return IssueResolutionPrompt(
+    onResolved: () {
+      context.read<AssistantChatBloc>().add(
+        SubmitFeedbackEvent(true),
+      );
+    },
+    onNotResolved: () {
+      context.read<AssistantChatBloc>().add(
+        SubmitFeedbackEvent(false),
+      );
+    },
+  );
+}
 
                     return const SizedBox(height: 90);
                   },

@@ -47,3 +47,9 @@ class LoadSessionMessagesEvent extends AssistantChatEvent {
 class MarkIssueResolvedEvent extends AssistantChatEvent {}
 
 class ContinueIssueEvent extends AssistantChatEvent {}
+
+class SubmitFeedbackEvent extends AssistantChatEvent {
+  final bool resolved;
+
+  SubmitFeedbackEvent(this.resolved);
+}

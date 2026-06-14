@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:maintai/ApiClient.dart';
 import 'package:maintai/domain/entities/user.dart';
 import 'package:maintai/domain/repositories/impl/assistantrepoimpl.dart';
+import 'package:maintai/domain/repositories/impl/feedbackrepoimpl.dart';
 import 'package:maintai/domain/repositories/impl/managerrepoimpl.dart';
 import 'package:maintai/domain/usecase/approve_Feedback.dart';
 import 'package:maintai/domain/usecase/getMachines.dart';
@@ -22,6 +23,7 @@ import 'package:maintai/storage/tokenStorage.dart';
 import '../bloc/auth_bloc.dart';
 import 'package:maintai/domain/usecase/getSessions.dart';
 import 'package:maintai/domain/usecase/getSessionMessages.dart';
+import 'package:maintai/domain/usecase/submitFeedback.dart';
 
 class AuthPage extends StatefulWidget {
   const AuthPage({super.key});
@@ -37,12 +39,15 @@ class _AuthPageState extends State<AuthPage> {
   final emailController = TextEditingController();
   final passwordController = TextEditingController();
   final nameController = TextEditingController();
+  final departmentController = TextEditingController();
+  
 
   @override
   void dispose() {
     emailController.dispose();
     nameController.dispose();
     passwordController.dispose();
+    departmentController.dispose();
     super.dispose();
   }
 
@@ -72,44 +77,6 @@ class _AuthPageState extends State<AuthPage> {
       body: SafeArea(
         child: BlocConsumer<AuthBloc, AuthState>(
           listener: (context, state) async {
-            // if (state is AuthSuccess) {
-            //   ScaffoldMessenger.of(
-            //     context,
-            //   ).showSnackBar(SnackBar(content: Text("Login successful: ${state.user.email}")));
-            //   await Future.delayed(Duration(seconds: 2));
-            //   Navigator.pushReplacement(
-            //     context,
-            //     MaterialPageRoute(
-            //       builder: (_) => BlocProvider(
-            //         create: (_) {
-            //           final apiClient = ApiClient(TokenStorage());
-            //           final assistantRepository = AssistantRepositoryImpl(
-            //             apiClient,
-            //           );
-
-            //           return AssistantChatBloc(
-            //               getMachines: GetMachines(assistantRepository),
-            //               sendChatMessage: SendChatMessage(assistantRepository),
-            //               getSessions: GetSessions(assistantRepository),
-            //               getSessionMessages: GetSessionMessages(
-            //                 assistantRepository,
-            //               ),
-            //             )
-            //             ..add(LoadMachinesEvent())
-            //             ..add(LoadSessionsEvent());
-            //         },
-            //         child: const AssistantChatPage(),
-            //       ),
-            //     ),
-            //   );
-
-            //   ;
-            // } else if (state is AuthFailure) {
-            //   ScaffoldMessenger.of(
-            //     context,
-            //   ).showSnackBar(SnackBar(content: Text(state.error)));
-            // }
-
             if (state is AuthSuccess) {
               final tokenStorage = TokenStorage();
               final apiClient = ApiClient(tokenStorage);
@@ -134,7 +101,8 @@ class _AuthPageState extends State<AuthPage> {
                 );
               } else {
                 final assistantRepository = AssistantRepositoryImpl(apiClient);
-
+                final feedbackRepository = feedbackrepoimpl(apiClient: apiClient);
+                final submitFeedback = SubmitFeedback(feedbackrepository: feedbackRepository);
                 Navigator.pushReplacement(
                   context,
                   MaterialPageRoute(
@@ -149,6 +117,7 @@ class _AuthPageState extends State<AuthPage> {
                               getSessionMessages: GetSessionMessages(
                                 assistantRepository,
                               ),
+                              submitFeedback: submitFeedback,
                             )
                             ..add(LoadMachinesEvent())
                             ..add(LoadSessionsEvent()),
@@ -223,7 +192,16 @@ class _AuthPageState extends State<AuthPage> {
                         ),
 
                         const SizedBox(height: 16),
+                         _buildTextField(
+                          controller: departmentController,
+                          hintText: 'Department',
+                          prefixIcon: Icons.library_books_outlined,
+                        ),
+
+                        const SizedBox(height: 16),
+
                       ],
+                      
                       _buildTextField(
                         controller: emailController,
                         hintText: 'Email',

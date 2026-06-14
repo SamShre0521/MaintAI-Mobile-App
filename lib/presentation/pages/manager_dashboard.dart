@@ -4,7 +4,9 @@ import 'package:maintai/ApiClient.dart';
 import 'package:maintai/domain/entities/feedback_isssues.dart';
 import 'package:maintai/domain/repositories/impl/assistantrepoimpl.dart';
 import 'package:maintai/domain/repositories/impl/authrepoimpl.dart';
+import 'package:maintai/domain/repositories/impl/feedbackrepoimpl.dart';
 import 'package:maintai/domain/usecase/authorizations.dart';
+import 'package:maintai/domain/usecase/submitFeedback.dart';
 import 'package:maintai/presentation/bloc/auth_bloc.dart';
 import 'package:maintai/presentation/bloc/manager_dashboard_bloc.dart';
 import 'package:maintai/presentation/bloc/manager_dashboard_event.dart';
@@ -57,7 +59,8 @@ class ManagerDashboardPage extends StatelessWidget {
               final tokenStorage = TokenStorage();
               final apiClient = ApiClient(tokenStorage);
               final assistantRepository = AssistantRepositoryImpl(apiClient);
-
+              final feedbackRepository = feedbackrepoimpl(apiClient: apiClient);
+              final submitFeedback = SubmitFeedback(feedbackrepository: feedbackRepository);
               Navigator.push(
                 context,
                 MaterialPageRoute(
@@ -72,6 +75,7 @@ class ManagerDashboardPage extends StatelessWidget {
                             getSessionMessages: GetSessionMessages(
                               assistantRepository,
                             ),
+                            submitFeedback: submitFeedback,
                           )
                           ..add(LoadMachinesEvent())
                           ..add(LoadSessionsEvent()),

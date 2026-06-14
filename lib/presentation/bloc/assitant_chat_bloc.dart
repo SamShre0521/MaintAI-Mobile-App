@@ -1,8 +1,10 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:maintai/domain/entities/chat_message.dart';
+import 'package:maintai/domain/entities/feedback.dart';
 import 'package:maintai/domain/entities/machines.dart';
 import 'package:maintai/domain/usecase/getMachines.dart';
 import 'package:maintai/domain/usecase/sendChatMessage.dart';
+import 'package:maintai/domain/usecase/submitFeedback.dart';
 import 'assistant_chat_event.dart';
 import 'assistant_chat_state.dart';
 import 'package:maintai/domain/usecase/getSessions.dart';
@@ -13,11 +15,13 @@ class AssistantChatBloc extends Bloc<AssistantChatEvent, AssistantChatState> {
   final SendChatMessage sendChatMessage;
   final GetSessions getSessions;
   final GetSessionMessages getSessionMessages;
+  final SubmitFeedback submitFeedback;
   AssistantChatBloc({
     required this.getMachines,
     required this.sendChatMessage,
     required this.getSessions,
     required this.getSessionMessages,
+    required this.submitFeedback,
   }) : super(const AssistantChatState()) {
     on<LoadMachinesEvent>(_onLoadMachines);
     on<ToggleExpandedComposerEvent>(_onToggleExpanded);
@@ -31,6 +35,7 @@ class AssistantChatBloc extends Bloc<AssistantChatEvent, AssistantChatState> {
     on<LoadSessionMessagesEvent>(_onLoadSessionMessages);
     on<MarkIssueResolvedEvent>(_onMarkIssueResolved);
     on<ContinueIssueEvent>(_onContinueIssue);
+    on<SubmitFeedbackEvent>(_onSubmitFeedback);
   }
 
   void _onMarkIssueResolved(
@@ -46,6 +51,48 @@ class AssistantChatBloc extends Bloc<AssistantChatEvent, AssistantChatState> {
       ),
     );
   }
+  Future<void> _onSubmitFeedback(
+  SubmitFeedbackEvent event,
+  Emitter<AssistantChatState> emit,
+) async {
+  try {
+    if (state.sessionId == null) return;
+    if (state.messages.length < 2) return;
+
+    final firstUserMessage = state.messages.firstWhere(
+      (m) => m.isUser,
+    );
+
+    final lastAiMessage = state.messages.lastWhere(
+      (m) => !m.isUser,
+    );
+
+    await submitFeedback(
+      FeedbackRequest(
+        sessionId: state.sessionId!,
+        question: firstUserMessage.text,
+        answer: lastAiMessage.text,
+        engineerFeedback:
+            event.resolved ? "correct" : "incorrect",
+      ),
+    );
+
+    emit(
+      state.copyWith(
+        isIssueResolved: event.resolved,
+        showResolutionPrompt: false,
+        isExpanded: false,
+        clearError: true,
+      ),
+    );
+  } catch (_) {
+    emit(
+      state.copyWith(
+        errorMessage: 'Failed to submit feedback',
+      ),
+    );
+  }
+}
 
   void _onContinueIssue(
     ContinueIssueEvent event,

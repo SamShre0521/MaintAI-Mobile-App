@@ -43,8 +43,8 @@ class ExpandedIssueCard extends StatelessWidget {
             IconButton(
               onPressed: () {
                 context.read<AssistantChatBloc>().add(
-                      ToggleExpandedComposerEvent(false),
-                    );
+                  ToggleExpandedComposerEvent(false),
+                );
               },
               icon: const Icon(Icons.keyboard_arrow_down_rounded),
             ),
@@ -64,10 +64,50 @@ class ExpandedIssueCard extends StatelessWidget {
             borderRadius: BorderRadius.circular(18),
             border: Border.all(color: const Color(0xFFE4DCC8)),
           ),
+          // child: DropdownButtonHideUnderline(
+          //   child: DropdownButton<String>(
+          //     value: state.selectedMachine?.id,
+          //     isExpanded: true,
+          //     icon: const Icon(Icons.keyboard_arrow_down_rounded),
+          //     items: state.machines.map((machine) {
+          //       return DropdownMenuItem<String>(
+          //         value: machine.id,
+          //         child: Text(
+          //           '${machine.name} (${machine.id})',
+          //           style: const TextStyle(
+          //             fontSize: 16,
+          //             color: Color(0xFF2E2E2E),
+          //           ),
+          //         ),
+          //       );
+          //     }).toList(),
+          //     onChanged: (value) {
+          //       if (value != null) {
+          //         context.read<AssistantChatBloc>().add(
+          //               SelectMachineEvent(value),
+          //             );
+          //       }
+          //     },
+          //   ),
+          // ),
           child: DropdownButtonHideUnderline(
             child: DropdownButton<String>(
-              value: state.selectedMachine?.id,
+              value:
+                  state.machines.any(
+                    (machine) => machine.id == state.selectedMachine?.id,
+                  )
+                  ? state.selectedMachine?.id
+                  : null,
               isExpanded: true,
+              hint: state.machines.isEmpty
+                  ? const Text(
+                      'Loading machines...',
+                      style: TextStyle(fontSize: 16, color: Color(0xFF9A9A9A)),
+                    )
+                  : const Text(
+                      'Select machine',
+                      style: TextStyle(fontSize: 16, color: Color(0xFF9A9A9A)),
+                    ),
               icon: const Icon(Icons.keyboard_arrow_down_rounded),
               items: state.machines.map((machine) {
                 return DropdownMenuItem<String>(
@@ -81,13 +121,15 @@ class ExpandedIssueCard extends StatelessWidget {
                   ),
                 );
               }).toList(),
-              onChanged: (value) {
-                if (value != null) {
-                  context.read<AssistantChatBloc>().add(
-                        SelectMachineEvent(value),
-                      );
-                }
-              },
+              onChanged: state.machines.isEmpty
+                  ? null
+                  : (value) {
+                      if (value != null) {
+                        context.read<AssistantChatBloc>().add(
+                          SelectMachineEvent(value),
+                        );
+                      }
+                    },
             ),
           ),
         ),
@@ -131,8 +173,8 @@ class ExpandedIssueCard extends StatelessWidget {
         GestureDetector(
           onTap: () {
             context.read<AssistantChatBloc>().add(
-                  PickImageEvent('machine_error_photo.jpg'),
-                );
+              PickImageEvent('machine_error_photo.jpg'),
+            );
           },
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
@@ -165,10 +207,7 @@ class ExpandedIssueCard extends StatelessWidget {
                     onPressed: () {
                       context.read<AssistantChatBloc>().add(RemoveImageEvent());
                     },
-                    icon: const Icon(
-                      Icons.close,
-                      color: Color(0xFF555555),
-                    ),
+                    icon: const Icon(Icons.close, color: Color(0xFF555555)),
                   ),
               ],
             ),
@@ -193,10 +232,7 @@ class ExpandedIssueCard extends StatelessWidget {
             icon: const Icon(Icons.send_rounded),
             label: const Text(
               'Send',
-              style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.w700,
-              ),
+              style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700),
             ),
           ),
         ),
