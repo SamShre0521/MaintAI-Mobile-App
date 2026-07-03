@@ -10,10 +10,7 @@ import 'package:maintai/presentation/bloc/manager_dashboard_state.dart';
 class ManagerReviewIssuePage extends StatefulWidget {
   final FeedbackIssue feedback;
 
-  const ManagerReviewIssuePage({
-    super.key,
-    required this.feedback,
-  });
+  const ManagerReviewIssuePage({super.key, required this.feedback});
 
   @override
   State<ManagerReviewIssuePage> createState() => _ManagerReviewIssuePageState();
@@ -58,17 +55,17 @@ class _ManagerReviewIssuePageState extends State<ManagerReviewIssuePage> {
     return BlocConsumer<ManagerDashboardBloc, ManagerDashboardState>(
       listener: (context, state) {
         if (state.successMessage != null && state.successMessage!.isNotEmpty) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(state.successMessage!)),
-          );
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text(state.successMessage!)));
 
           Navigator.pop(context);
         }
 
         if (state.errorMessage != null && state.errorMessage!.isNotEmpty) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(state.errorMessage!)),
-          );
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text(state.errorMessage!)));
         }
       },
       builder: (context, state) {
@@ -106,7 +103,9 @@ class _ManagerReviewIssuePageState extends State<ManagerReviewIssuePage> {
             ],
           ),
           body: ListView(
-            padding: const EdgeInsets.fromLTRB(16, 10, 16, 130),
+            // padding: const EdgeInsets.fromLTRB(16, 10, 16, 130),
+            padding: const EdgeInsets.fromLTRB(16, 10, 16, 150),
+
             children: [
               _IssueHeader(feedback: widget.feedback),
               const SizedBox(height: 18),
@@ -135,122 +134,193 @@ class _ManagerReviewIssuePageState extends State<ManagerReviewIssuePage> {
               _ManagerCommentBox(controller: commentController),
             ],
           ),
+
+          // bottomNavigationBar: SafeArea(
+          //   top: false,
+          //   child: Container(
+          //     padding: const EdgeInsets.fromLTRB(12, 10, 12, 12),
+          //     decoration: const BoxDecoration(
+          //       color: Colors.white,
+          //       border: Border(top: BorderSide(color: Color(0xFFE4DCC8))),
+          //       boxShadow: [
+          //         BoxShadow(
+          //           color: Color(0x14000000),
+          //           blurRadius: 14,
+          //           offset: Offset(0, -3),
+          //         ),
+          //       ],
+          //     ),
+          //     child: Row(
+          //       children: [
+          //         Expanded(
+          //           child: OutlinedButton.icon(
+          //             onPressed: state.isActionLoading
+          //                 ? null
+          //                 : () {
+          //                     commentController.text =
+          //                         'Need more details from engineer';
+          //                     ScaffoldMessenger.of(context).showSnackBar(
+          //                       const SnackBar(
+          //                         content: Text(
+          //                           'Request more info flow will be added later',
+          //                         ),
+          //                       ),
+          //                     );
+          //                   },
+          //             icon: const Icon(Icons.info_outline_rounded, size: 18),
+          //             label: const Text('More Info'),
+          //             style: OutlinedButton.styleFrom(
+          //               foregroundColor: const Color(0xFF2E2E2E),
+          //               side: const BorderSide(color: Color(0xFFE4DCC8)),
+          //               minimumSize: const Size(0, 52),
+          //               shape: RoundedRectangleBorder(
+          //                 borderRadius: BorderRadius.circular(16),
+          //               ),
+          //             ),
+          //           ),
+          //         ),
+          //         const SizedBox(width: 8),
+          //         Expanded(
+          //           child: OutlinedButton.icon(
+          //             onPressed: state.isActionLoading
+          //                 ? null
+          //                 : () {
+          //                     final comment =
+          //                         commentController.text.trim().isEmpty
+          //                             ? 'Solution rejected'
+          //                             : commentController.text.trim();
+
+          //                     context.read<ManagerDashboardBloc>().add(
+          //                           RejectFeedbackEvent(
+          //                             feedbackId: widget.feedback.id,
+          //                             managerComment: comment,
+          //                           ),
+          //                         );
+          //                   },
+          //             icon: const Icon(Icons.close_rounded, size: 18),
+          //             label: const Text('Reject'),
+          //             style: OutlinedButton.styleFrom(
+          //               foregroundColor: const Color(0xFFDC2626),
+          //               side: const BorderSide(color: Color(0xFFFCA5A5)),
+          //               minimumSize: const Size(0, 52),
+          //               shape: RoundedRectangleBorder(
+          //                 borderRadius: BorderRadius.circular(16),
+          //               ),
+          //             ),
+          //           ),
+          //         ),
+          //         const SizedBox(width: 8),
+          //         Expanded(
+          //           flex: 2,
+          //           child: ElevatedButton.icon(
+          //             onPressed: state.isActionLoading
+          //                 ? null
+          //                 : () {
+          //                     final comment =
+          //                         commentController.text.trim().isEmpty
+          //                             ? 'Valid solution'
+          //                             : commentController.text.trim();
+
+          //                     context.read<ManagerDashboardBloc>().add(
+          //                           ApproveFeedbackEvent(
+          //                             feedbackId: widget.feedback.id,
+          //                             managerComment: comment,
+          //                           ),
+          //                         );
+          //                   },
+          //             icon: state.isActionLoading
+          //                 ? const SizedBox(
+          //                     width: 18,
+          //                     height: 18,
+          //                     child: CircularProgressIndicator(
+          //                       color: Colors.white,
+          //                       strokeWidth: 2,
+          //                     ),
+          //                   )
+          //                 : const Icon(Icons.check_rounded, size: 19),
+          //             label: const Text('Approve'),
+          //             style: ElevatedButton.styleFrom(
+          //               backgroundColor: const Color(0xFF22C55E),
+          //               foregroundColor: Colors.white,
+          //               elevation: 0,
+          //               minimumSize: const Size(0, 52),
+          //               shape: RoundedRectangleBorder(
+          //                 borderRadius: BorderRadius.circular(16),
+          //               ),
+          //               textStyle: const TextStyle(
+          //                 fontWeight: FontWeight.w800,
+          //                 fontSize: 14,
+          //               ),
+          //             ),
+          //           ),
+          //         ),
+          //       ],
+          //     ),
+          //   ),
+          // ),
           bottomNavigationBar: SafeArea(
             top: false,
             child: Container(
-              padding: const EdgeInsets.fromLTRB(12, 10, 12, 12),
+              padding: const EdgeInsets.all(12),
               decoration: const BoxDecoration(
                 color: Colors.white,
                 border: Border(top: BorderSide(color: Color(0xFFE4DCC8))),
-                boxShadow: [
-                  BoxShadow(
-                    color: Color(0x14000000),
-                    blurRadius: 14,
-                    offset: Offset(0, -3),
-                  ),
-                ],
               ),
-              child: Row(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
                 children: [
-                  Expanded(
-                    child: OutlinedButton.icon(
-                      onPressed: state.isActionLoading
-                          ? null
-                          : () {
-                              commentController.text =
-                                  'Need more details from engineer';
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
-                                  content: Text(
-                                    'Request more info flow will be added later',
-                                  ),
-                                ),
-                              );
-                            },
-                      icon: const Icon(Icons.info_outline_rounded, size: 18),
-                      label: const Text('More Info'),
-                      style: OutlinedButton.styleFrom(
-                        foregroundColor: const Color(0xFF2E2E2E),
-                        side: const BorderSide(color: Color(0xFFE4DCC8)),
-                        minimumSize: const Size(0, 52),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(16),
-                        ),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: OutlinedButton.icon(
-                      onPressed: state.isActionLoading
-                          ? null
-                          : () {
-                              final comment =
-                                  commentController.text.trim().isEmpty
-                                      ? 'Solution rejected'
-                                      : commentController.text.trim();
-
-                              context.read<ManagerDashboardBloc>().add(
-                                    RejectFeedbackEvent(
-                                      feedbackId: widget.feedback.id,
-                                      managerComment: comment,
-                                    ),
-                                  );
-                            },
-                      icon: const Icon(Icons.close_rounded, size: 18),
-                      label: const Text('Reject'),
-                      style: OutlinedButton.styleFrom(
-                        foregroundColor: const Color(0xFFDC2626),
-                        side: const BorderSide(color: Color(0xFFFCA5A5)),
-                        minimumSize: const Size(0, 52),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(16),
-                        ),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    flex: 2,
+                  SizedBox(
+                    width: double.infinity,
+                    height: 54,
                     child: ElevatedButton.icon(
                       onPressed: state.isActionLoading
                           ? null
                           : () {
                               final comment =
                                   commentController.text.trim().isEmpty
-                                      ? 'Valid solution'
-                                      : commentController.text.trim();
+                                  ? 'Valid solution'
+                                  : commentController.text.trim();
 
                               context.read<ManagerDashboardBloc>().add(
-                                    ApproveFeedbackEvent(
-                                      feedbackId: widget.feedback.id,
-                                      managerComment: comment,
-                                    ),
-                                  );
+                                ApproveFeedbackEvent(
+                                  feedbackId: widget.feedback.id,
+                                  managerComment: comment,
+                                ),
+                              );
                             },
-                      icon: state.isActionLoading
-                          ? const SizedBox(
-                              width: 18,
-                              height: 18,
-                              child: CircularProgressIndicator(
-                                color: Colors.white,
-                                strokeWidth: 2,
-                              ),
-                            )
-                          : const Icon(Icons.check_rounded, size: 19),
-                      label: const Text('Approve'),
+                      icon: const Icon(Icons.check),
+                      label: const Text('Approve & Store'),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: const Color(0xFF22C55E),
                         foregroundColor: Colors.white,
-                        elevation: 0,
-                        minimumSize: const Size(0, 52),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(16),
-                        ),
-                        textStyle: const TextStyle(
-                          fontWeight: FontWeight.w800,
-                          fontSize: 14,
-                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                  SizedBox(
+                    width: double.infinity,
+                    height: 54,
+                    child: OutlinedButton.icon(
+                      onPressed: state.isActionLoading
+                          ? null
+                          : () {
+                              final comment =
+                                  commentController.text.trim().isEmpty
+                                  ? 'Solution rejected'
+                                  : commentController.text.trim();
+
+                              context.read<ManagerDashboardBloc>().add(
+                                RejectFeedbackEvent(
+                                  feedbackId: widget.feedback.id,
+                                  managerComment: comment,
+                                ),
+                              );
+                            },
+                      icon: const Icon(Icons.close),
+                      label: const Text('Reject'),
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: const Color(0xFFDC2626),
+                        side: const BorderSide(color: Color(0xFFFCA5A5)),
                       ),
                     ),
                   ),
@@ -264,6 +334,80 @@ class _ManagerReviewIssuePageState extends State<ManagerReviewIssuePage> {
   }
 }
 
+// class _IssueHeader extends StatelessWidget {
+//   final FeedbackIssue feedback;
+
+//   const _IssueHeader({required this.feedback});
+
+//   @override
+//   Widget build(BuildContext context) {
+//     return Container(
+//       padding: const EdgeInsets.fromLTRB(16, 16, 16, 14),
+//       decoration: BoxDecoration(
+//         color: Colors.white,
+//         border: Border.all(color: const Color(0xFFE4DCC8)),
+//         borderRadius: BorderRadius.circular(24),
+//       ),
+//       child: Column(
+//         crossAxisAlignment: CrossAxisAlignment.start,
+//         children: [
+//           Row(
+//             children: [
+//               const CircleAvatar(
+//                 radius: 27,
+//                 backgroundColor: Color(0xFFFFF7ED),
+//                 child: Icon(
+//                   Icons.pending_actions_rounded,
+//                   color: Color(0xFFF97316),
+//                   size: 28,
+//                 ),
+//               ),
+//               const SizedBox(width: 14),
+//               Expanded(
+//                 child: Text(
+//                   feedback.question,
+//                   style: const TextStyle(
+//                     fontSize: 20,
+//                     fontWeight: FontWeight.w900,
+//                     color: Color(0xFF111827),
+//                   ),
+//                 ),
+//               ),
+//             ],
+//           ),
+//           const SizedBox(height: 18),
+//           Wrap(
+//             spacing: 10,
+//             runSpacing: 10,
+//             children: [
+//               _InfoChip(
+//                 icon: Icons.person_outline_rounded,
+//                 title: 'Engineer',
+//                 value: feedback.engineerName,
+//               ),
+//               _InfoChip(
+//                 icon: Icons.email_outlined,
+//                 title: 'Email',
+//                 value: feedback.engineerEmail,
+//               ),
+//               _InfoChip(
+//                 icon: Icons.business_rounded,
+//                 title: 'Department',
+//                 value: feedback.department,
+//               ),
+//               _InfoChip(
+//                 icon: Icons.flag_outlined,
+//                 title: 'Status',
+//                 value: feedback.managerStatus,
+//               ),
+//             ],
+//           ),
+//         ],
+//       ),
+//     );
+//   }
+// }
+
 class _IssueHeader extends StatelessWidget {
   final FeedbackIssue feedback;
 
@@ -272,7 +416,7 @@ class _IssueHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.fromLTRB(16, 16, 16, 14),
+      padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
         color: Colors.white,
         border: Border.all(color: const Color(0xFFE4DCC8)),
@@ -284,7 +428,7 @@ class _IssueHeader extends StatelessWidget {
           Row(
             children: [
               const CircleAvatar(
-                radius: 27,
+                radius: 26,
                 backgroundColor: Color(0xFFFFF7ED),
                 child: Icon(
                   Icons.pending_actions_rounded,
@@ -296,41 +440,49 @@ class _IssueHeader extends StatelessWidget {
               Expanded(
                 child: Text(
                   feedback.question,
+                  maxLines: 3,
+                  overflow: TextOverflow.ellipsis,
                   style: const TextStyle(
-                    fontSize: 20,
+                    fontSize: 22,
                     fontWeight: FontWeight.w900,
                     color: Color(0xFF111827),
+                    height: 1.25,
                   ),
                 ),
               ),
             ],
           ),
           const SizedBox(height: 18),
-          Wrap(
-            spacing: 10,
-            runSpacing: 10,
-            children: [
-              _InfoChip(
-                icon: Icons.person_outline_rounded,
-                title: 'Engineer',
-                value: feedback.engineerName,
-              ),
-              _InfoChip(
-                icon: Icons.email_outlined,
-                title: 'Email',
-                value: feedback.engineerEmail,
-              ),
-              _InfoChip(
-                icon: Icons.business_rounded,
-                title: 'Department',
-                value: feedback.department,
-              ),
-              _InfoChip(
-                icon: Icons.flag_outlined,
-                title: 'Status',
-                value: feedback.managerStatus,
-              ),
-            ],
+          const Divider(height: 1),
+          const SizedBox(height: 14),
+
+          _CompactInfoRow(
+            icon: Icons.person_outline_rounded,
+            label: 'Engineer',
+            value: feedback.engineerName,
+          ),
+          const SizedBox(height: 10),
+
+          _CompactInfoRow(
+            icon: Icons.email_outlined,
+            label: 'Email',
+            value: feedback.engineerEmail,
+          ),
+          const SizedBox(height: 10),
+
+          _CompactInfoRow(
+            icon: Icons.business_rounded,
+            label: 'Department',
+            value: feedback.department,
+          ),
+          const SizedBox(height: 10),
+
+          _CompactInfoRow(
+            icon: Icons.flag_outlined,
+            label: 'Status',
+            value: feedback.managerStatus.isEmpty
+                ? 'pending'
+                : feedback.managerStatus,
           ),
         ],
       ),
@@ -338,63 +490,112 @@ class _IssueHeader extends StatelessWidget {
   }
 }
 
-class _InfoChip extends StatelessWidget {
+class _CompactInfoRow extends StatelessWidget {
   final IconData icon;
-  final String title;
+  final String label;
   final String value;
 
-  const _InfoChip({
+  const _CompactInfoRow({
     required this.icon,
-    required this.title,
+    required this.label,
     required this.value,
   });
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      width: 158,
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: const Color(0xFFFAFAFA),
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: const Color(0xFFE5E7EB)),
-      ),
-      child: Row(
-        children: [
-          Icon(icon, size: 20, color: const Color(0xFF6B7280)),
-          const SizedBox(width: 8),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                    fontSize: 11,
-                    color: Color(0xFF6B7280),
-                  ),
-                ),
-                const SizedBox(height: 3),
-                Text(
-                  value.isEmpty ? '-' : value,
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                    fontSize: 12,
-                    color: Color(0xFF111827),
-                    fontWeight: FontWeight.w800,
-                  ),
-                ),
-              ],
+    return Row(
+      children: [
+        Icon(
+          icon,
+          size: 21,
+          color: const Color(0xFF6B7280),
+        ),
+        const SizedBox(width: 10),
+        SizedBox(
+          width: 92,
+          child: Text(
+            label,
+            style: const TextStyle(
+              fontSize: 13,
+              color: Color(0xFF7A7A7A),
+              fontWeight: FontWeight.w600,
             ),
           ),
-        ],
-      ),
+        ),
+        Expanded(
+          child: Text(
+            value.isEmpty ? '-' : value,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+            style: const TextStyle(
+              fontSize: 14,
+              color: Color(0xFF111827),
+              fontWeight: FontWeight.w800,
+            ),
+          ),
+        ),
+      ],
     );
   }
 }
+
+// class _InfoChip extends StatelessWidget {
+//   final IconData icon;
+//   final String title;
+//   final String value;
+
+//   const _InfoChip({
+//     required this.icon,
+//     required this.title,
+//     required this.value,
+//   });
+
+//   @override
+//   Widget build(BuildContext context) {
+//     return Container(
+//       width: 158,
+//       padding: const EdgeInsets.all(12),
+//       decoration: BoxDecoration(
+//         color: const Color(0xFFFAFAFA),
+//         borderRadius: BorderRadius.circular(18),
+//         border: Border.all(color: const Color(0xFFE5E7EB)),
+//       ),
+//       child: Row(
+//         children: [
+//           Icon(icon, size: 20, color: const Color(0xFF6B7280)),
+//           const SizedBox(width: 8),
+//           Expanded(
+//             child: Column(
+//               crossAxisAlignment: CrossAxisAlignment.start,
+//               children: [
+//                 Text(
+//                   title,
+//                   maxLines: 1,
+//                   overflow: TextOverflow.ellipsis,
+//                   style: const TextStyle(
+//                     fontSize: 11,
+//                     color: Color(0xFF6B7280),
+//                   ),
+//                 ),
+//                 const SizedBox(height: 3),
+//                 Text(
+//                   value.isEmpty ? '-' : value,
+//                   maxLines: 2,
+//                   overflow: TextOverflow.ellipsis,
+//                   style: const TextStyle(
+//                     fontSize: 12,
+//                     color: Color(0xFF111827),
+//                     fontWeight: FontWeight.w800,
+//                   ),
+//                 ),
+//               ],
+//             ),
+//           ),
+//         ],
+//       ),
+//     );
+//   }
+// }
 
 class _ReviewUserBubble extends StatelessWidget {
   final ChatMessage message;
@@ -478,10 +679,7 @@ class _BubbleContent extends StatelessWidget {
           alignment: Alignment.bottomRight,
           child: Text(
             message.time,
-            style: const TextStyle(
-              fontSize: 11,
-              color: Color(0xFF6B7280),
-            ),
+            style: const TextStyle(fontSize: 11, color: Color(0xFF6B7280)),
           ),
         ),
       ],
@@ -513,7 +711,9 @@ class _FeedbackMarker extends StatelessWidget {
             isCorrect
                 ? Icons.check_circle_outline_rounded
                 : Icons.info_outline_rounded,
-            color: isCorrect ? const Color(0xFF22C55E) : const Color(0xFFF97316),
+            color: isCorrect
+                ? const Color(0xFF22C55E)
+                : const Color(0xFFF97316),
           ),
           const SizedBox(width: 10),
           Expanded(
@@ -584,9 +784,7 @@ class _AiResolutionCard extends StatelessWidget {
 class _ManagerCommentBox extends StatelessWidget {
   final TextEditingController controller;
 
-  const _ManagerCommentBox({
-    required this.controller,
-  });
+  const _ManagerCommentBox({required this.controller});
 
   @override
   Widget build(BuildContext context) {
@@ -640,10 +838,7 @@ class _StatusChip extends StatelessWidget {
   final String text;
   final Color color;
 
-  const _StatusChip({
-    required this.text,
-    required this.color,
-  });
+  const _StatusChip({required this.text, required this.color});
 
   @override
   Widget build(BuildContext context) {

@@ -34,7 +34,7 @@ class AssistantChatState {
         'Conveyor Belt C (CB-2021-C)',
         'Conveyor Belt D (CB-2021-D)',
       ],
-      messages: const [
+      messages: [
         ChatMessage(
           id: 'welcome-user',
           isUser: true,

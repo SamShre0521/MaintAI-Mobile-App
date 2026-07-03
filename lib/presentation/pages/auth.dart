@@ -162,7 +162,7 @@ class _AuthPageState extends State<AuthPage> {
                           children: [
                             const TextSpan(text: 'Welcome to '),
                             TextSpan(
-                              text: 'SmartAssist',
+                              text: 'MaintAI',
                               style: const TextStyle(
                                 fontWeight: FontWeight.w700,
                               ),

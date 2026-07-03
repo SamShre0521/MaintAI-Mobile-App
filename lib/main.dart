@@ -22,7 +22,7 @@ class MyApp extends StatelessWidget {
 
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      title: 'SmartAssist',
+      title: 'MaintAI',
       theme: ThemeData(
         primarySwatch: Colors.blue,
       ),

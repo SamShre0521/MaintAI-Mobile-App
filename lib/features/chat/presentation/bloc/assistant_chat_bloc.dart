@@ -1,4 +1,5 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:maintai/domain/usecase/sendChatMessage.dart';
 import '../../domain/entities/chat_message.dart';
 import '../../domain/usecases/send_chat_message.dart';
 import 'assistant_chat_event.dart';

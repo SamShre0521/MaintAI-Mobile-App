@@ -166,41 +166,41 @@ class ManagerDashboardPage extends StatelessWidget {
                 ),
               ],
             ),
-            actions: [
-              Stack(
-                alignment: Alignment.topRight,
-                children: [
-                  IconButton(
-                    onPressed: () {},
-                    icon: const Icon(
-                      Icons.notifications_none_rounded,
-                      color: Color(0xFF2E2E2E),
-                      size: 30,
-                    ),
-                  ),
-                  if (state.pendingCount > 0)
-                    Positioned(
-                      top: 8,
-                      right: 8,
-                      child: Container(
-                        padding: const EdgeInsets.all(5),
-                        decoration: const BoxDecoration(
-                          color: Color(0xFFF1C84B),
-                          shape: BoxShape.circle,
-                        ),
-                        child: Text(
-                          state.pendingCount.toString(),
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 10,
-                            fontWeight: FontWeight.w800,
-                          ),
-                        ),
-                      ),
-                    ),
-                ],
-              ),
-            ],
+            // actions: [
+            //   Stack(
+            //     alignment: Alignment.topRight,
+            //     children: [
+            //       IconButton(
+            //         onPressed: () {},
+            //         icon: const Icon(
+            //           Icons.notifications_none_rounded,
+            //           color: Color(0xFF2E2E2E),
+            //           size: 30,
+            //         ),
+            //       ),
+            //       if (state.pendingCount > 0)
+            //         Positioned(
+            //           top: 8,
+            //           right: 8,
+            //           child: Container(
+            //             padding: const EdgeInsets.all(5),
+            //             decoration: const BoxDecoration(
+            //               color: Color(0xFFF1C84B),
+            //               shape: BoxShape.circle,
+            //             ),
+            //             child: Text(
+            //               state.pendingCount.toString(),
+            //               style: const TextStyle(
+            //                 color: Colors.white,
+            //                 fontSize: 10,
+            //                 fontWeight: FontWeight.w800,
+            //               ),
+            //             ),
+            //           ),
+            //         ),
+            //     ],
+            //   ),
+            // ],
           ),
           body: state.isLoading
               ? const Center(
