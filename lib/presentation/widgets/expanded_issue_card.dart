@@ -99,7 +99,7 @@ class ExpandedIssueCard extends StatelessWidget {
                   ? state.selectedMachine?.id
                   : null,
               isExpanded: true,
-              hint: state.machines.isEmpty
+              hint: state.isLoading
                   ? const Text(
                       'Loading machines...',
                       style: TextStyle(fontSize: 16, color: Color(0xFF9A9A9A)),

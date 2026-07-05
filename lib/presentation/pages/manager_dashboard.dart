@@ -220,7 +220,7 @@ class ManagerDashboardPage extends StatelessWidget {
                         physics: const NeverScrollableScrollPhysics(),
                         crossAxisSpacing: 12,
                         mainAxisSpacing: 12,
-                        childAspectRatio: 1.12,
+                        childAspectRatio: 0.95,
                         children: [
                           _MetricCard(
                             icon: Icons.chat_bubble_outline_rounded,
@@ -435,7 +435,8 @@ class _MetricCard extends StatelessWidget {
             backgroundColor: iconColor.withOpacity(0.15),
             child: Icon(icon, color: iconColor, size: 24),
           ),
-          const Spacer(),
+          // const Spacer(),
+          const SizedBox(height: 16),
           Text(
             title,
             maxLines: 1,

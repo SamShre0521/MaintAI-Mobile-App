@@ -153,34 +153,66 @@ class AssistantChatBloc extends Bloc<AssistantChatEvent, AssistantChatState> {
     }
   }
 
+  // Future<void> _onLoadMachines(
+  //   LoadMachinesEvent event,
+  //   Emitter<AssistantChatState> emit,
+  // ) async {
+  //   emit(state.copyWith(isLoading: true, clearError: true));
+
+  //   try {
+  //     final machines = await getMachines();
+
+  //     emit(
+  //       state.copyWith(
+  //         isLoading: false,
+  //         machines: machines,
+  //         selectedMachine: machines.isNotEmpty ? machines.first : null,
+  //         clearError: true,
+  //       ),
+  //     );
+  //   } catch (_) {
+  //     emit(
+  //       state.copyWith(
+  //         isLoading: false,
+  //         errorMessage: 'Failed to load machines',
+  //       ),
+  //     );
+  //   }
+  // }
+
   Future<void> _onLoadMachines(
-    LoadMachinesEvent event,
-    Emitter<AssistantChatState> emit,
-  ) async {
-    emit(state.copyWith(isLoading: true, clearError: true));
+  LoadMachinesEvent event,
+  Emitter<AssistantChatState> emit,
+) async {
+  emit(state.copyWith(isLoading: true));
 
-    try {
-      final machines = await getMachines();
+  try {
+    final machines = await getMachines();
 
-      emit(
-        state.copyWith(
-          isLoading: false,
-          machines: machines,
-          selectedMachine: machines.isNotEmpty ? machines.first : null,
-          clearError: true,
-        ),
-      );
-    } catch (_) {
-      emit(
-        state.copyWith(
-          isLoading: false,
-          errorMessage: 'Failed to load machines',
-        ),
-      );
-    }
+    print("=========== MACHINES ===========");
+    print(machines.length);
+    print(machines);
+
+    emit(
+      state.copyWith(
+        isLoading: false,
+        machines: machines,
+        selectedMachine: machines.isNotEmpty ? machines.first : null,
+      ),
+    );
+  } catch (e, s) {
+    print("=========== MACHINE ERROR ===========");
+    print(e);
+    print(s);
+
+    emit(
+      state.copyWith(
+        isLoading: false,
+        errorMessage: "Failed to load machines",
+      ),
+    );
   }
-
-  
+}
 
   void _onToggleExpanded(
     ToggleExpandedComposerEvent event,

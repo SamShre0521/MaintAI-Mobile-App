@@ -131,6 +131,7 @@ class _AssistantChatPageState extends State<AssistantChatPage> {
               final bloc = context.read<AssistantChatBloc>();
               Navigator.of(context).pop();
               bloc.add(StartNewChatEvent());
+              bloc.add(LoadMachinesEvent());
               issueController.clear();
               FocusScope.of(context).unfocus();
             },
@@ -230,7 +231,7 @@ class _AssistantChatPageState extends State<AssistantChatPage> {
               ),
             ),
             title: const Text(
-              'SmartAssist',
+              'MaintAI',
               style: TextStyle(
                 color: Color(0xFF2E2E2E),
                 fontSize: 24,
