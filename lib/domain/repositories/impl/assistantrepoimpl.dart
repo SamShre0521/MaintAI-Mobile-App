@@ -11,16 +11,16 @@ class AssistantRepositoryImpl implements AssistantRepository {
   AssistantRepositoryImpl(this.apiClient);
 
   @override
-  Future<List<Machines>> getMachines() async {
-    await Future.delayed(const Duration(milliseconds: 300));
+Future<List<Machines>> getMachines() async {
+  final response = await apiClient.dio.get('/machines');
 
-    return const [
-      Machines(id: 'CB-2021-A', name: 'Conveyor Belt A'),
-      Machines(id: 'CB-2021-B', name: 'Conveyor Belt B'),
-      Machines(id: 'CB-2021-C', name: 'Conveyor Belt C'),
-      Machines(id: 'CB-2021-D', name: 'Conveyor Belt D'),
-    ];
-  }
+  final List<dynamic> machines = response.data['machines'] ?? [];
+
+  return machines
+      .map((json) => Machines.fromJson(json))
+      .where((machine) => machine.id.isNotEmpty && machine.name.isNotEmpty)
+      .toList();
+}
 
   @override
   Future<ChatResponse> sendMessage({

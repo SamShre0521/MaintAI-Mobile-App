@@ -115,59 +115,6 @@ class _AssistantChatPageState extends State<AssistantChatPage> {
       builder: (context, state) {
         return Scaffold(
           backgroundColor: const Color(0xFFF8F6F1),
-          // drawer: AppSidebar(
-          //   userName: userName,
-          //   userRole: userRole,
-          //   historyItems: state.sessions
-          //       .map(
-          //         (session) => ChatHistoryItem(
-          //           sessionId: session.sessionId,
-          //           title: session.title,
-          //         ),
-          //       )
-          //       .toList(),
-          //   onNewChat: () {
-          //     Navigator.pop(context);
-          //     context.read<AssistantChatBloc>().add(StartNewChatEvent());
-          //   },
-          //   onSelectHistory: (sessionId) {
-          //     Navigator.pop(context);
-          //     context.read<AssistantChatBloc>().add(
-          //       LoadSessionMessagesEvent(sessionId),
-          //     );
-          //   },
-          //   onMachines: () {
-          //     Navigator.pop(context);
-          //   },
-          //   onUploads: () {
-          //     Navigator.pop(context);
-          //   },
-          //   onSettings: () {
-          //     Navigator.pop(context);
-          //   },
-          //   onLogout: () async {
-          //     await TokenStorage().clearToken();
-
-          //     if (!context.mounted) return;
-
-          //     Navigator.of(context).pushAndRemoveUntil(
-          //       MaterialPageRoute(
-          //         builder: (_) => BlocProvider(
-          //           create: (_) => AuthBloc(
-          //             LoginUseCase(
-          //               Authrepoimpl(ApiClient(TokenStorage()), TokenStorage()),
-          //             ),
-          //             SignupUseCase(
-          //               Authrepoimpl(ApiClient(TokenStorage()), TokenStorage()),
-          //             ),
-          //           ),
-          //           child: const AuthPage(),
-          //         ),
-          //       ),
-          //       (route) => false,
-          //     );
-          //   },
-          // ),
           drawer: AppSidebar(
             userName: userName,
             userRole: userRole,

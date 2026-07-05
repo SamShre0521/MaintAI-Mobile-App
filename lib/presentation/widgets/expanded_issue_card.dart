@@ -113,7 +113,7 @@ class ExpandedIssueCard extends StatelessWidget {
                 return DropdownMenuItem<String>(
                   value: machine.id,
                   child: Text(
-                    '${machine.name} (${machine.id})',
+                    machine.name,
                     style: const TextStyle(
                       fontSize: 16,
                       color: Color(0xFF2E2E2E),
