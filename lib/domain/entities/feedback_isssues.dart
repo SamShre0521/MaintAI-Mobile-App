@@ -34,24 +34,36 @@ class FeedbackIssue {
   });
 
   factory FeedbackIssue.fromJson(Map<String, dynamic> json) {
-    final user = json['userId'] ?? {};
+  final user = json['userId'] ?? {};
 
-    return FeedbackIssue(
-      id: json['_id'] ?? '',
-      sessionId: json['sessionId'] ?? '',
-      engineerId: user['_id'] ?? '',
-      engineerName: user['name'] ?? 'Unknown Engineer',
-      engineerEmail: user['email'] ?? '',
-      engineerRole: user['role'] ?? '',
-      question: json['question'] ?? '',
-      answer: json['answer'] ?? '',
-      engineerFeedback: json['engineerFeedback'] ?? '',
-      managerStatus: json['managerStatus'] ?? '',
-      managerComment: json['managerComment'] ?? '',
-      department: json['department'] ?? '',
-      approvedBy: json['approvedBy'],
-      createdAt: json['createdAt'] ?? '',
-      updatedAt: json['updatedAt'] ?? '',
-    );
+  String? approvedBy;
+
+  final approved = json['approvedBy'];
+
+  if (approved == null) {
+    approvedBy = null;
+  } else if (approved is String) {
+    approvedBy = approved;
+  } else if (approved is Map<String, dynamic>) {
+    approvedBy = approved['name'] ?? approved['_id'];
   }
+
+  return FeedbackIssue(
+    id: json['_id'] ?? '',
+    sessionId: json['sessionId'] ?? '',
+    engineerId: user['_id'] ?? '',
+    engineerName: user['name'] ?? 'Unknown Engineer',
+    engineerEmail: user['email'] ?? '',
+    engineerRole: user['role'] ?? '',
+    question: json['question'] ?? '',
+    answer: json['answer'] ?? '',
+    engineerFeedback: json['engineerFeedback'] ?? '',
+    managerStatus: json['managerStatus'] ?? '',
+    managerComment: json['managerComment'] ?? '',
+    department: json['department'] ?? '',
+    approvedBy: approvedBy,
+    createdAt: json['createdAt'] ?? '',
+    updatedAt: json['updatedAt'] ?? '',
+  );
+}
 }

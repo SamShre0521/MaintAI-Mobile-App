@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:maintai/ApiClient.dart';
 import 'package:maintai/domain/entities/feedback_isssues.dart';
-import 'package:maintai/presentation/bloc/manager_dashboard_bloc.dart';
-import 'package:maintai/presentation/bloc/manager_dashboard_state.dart';
+import 'package:maintai/domain/repositories/impl/managerrepoimpl.dart';
+import 'package:maintai/domain/usecase/getFeedbackByStatus.dart';
 import 'package:maintai/presentation/pages/manager_review_issue.dart';
+import 'package:maintai/storage/tokenStorage.dart';
 
-class ManagerCasesPage extends StatelessWidget {
+class ManagerCasesPage extends StatefulWidget {
   final String status;
 
   const ManagerCasesPage({
@@ -14,75 +15,129 @@ class ManagerCasesPage extends StatelessWidget {
   });
 
   @override
+  State<ManagerCasesPage> createState() => _ManagerCasesPageState();
+}
+
+class _ManagerCasesPageState extends State<ManagerCasesPage> {
+  bool isLoading = true;
+  String? errorMessage;
+  List<FeedbackIssue> cases = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _loadCases();
+  }
+
+  Future<void> _loadCases() async {
+    setState(() {
+      isLoading = true;
+      errorMessage = null;
+    });
+
+    try {
+      final tokenStorage = TokenStorage();
+      final apiClient = ApiClient(tokenStorage);
+      final repository = ManagerRepositoryImpl(apiClient);
+      final usecase = GetFeedbacksByStatus(repository);
+
+      final data = await usecase(widget.status);
+
+      if (!mounted) return;
+
+      setState(() {
+        cases = data;
+        isLoading = false;
+      });
+    } catch (e) {
+      if (!mounted) return;
+
+      setState(() {
+        isLoading = false;
+        errorMessage = 'Failed to load ${widget.status} cases';
+      });
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final title = status == 'approved' ? 'Approved Cases' : 'Pending Cases';
+    final isApproved = widget.status.toLowerCase() == 'approved';
+    final title = isApproved ? 'Approved Cases' : 'Pending Cases';
 
-    return BlocBuilder<ManagerDashboardBloc, ManagerDashboardState>(
-      builder: (context, state) {
-        final cases = state.pendingFeedbacks
-            .where((f) => f.managerStatus.toLowerCase() == status)
-            .toList();
-
-        return Scaffold(
-          backgroundColor: const Color(0xFFF8F6F1),
-          appBar: AppBar(
-            backgroundColor: const Color(0xFFF8F6F1),
-            elevation: 0,
-            surfaceTintColor: const Color(0xFFF8F6F1),
-            leading: IconButton(
-              icon: const Icon(Icons.arrow_back_rounded),
-              onPressed: () => Navigator.pop(context),
-            ),
-            title: Text(
-              title,
-              style: const TextStyle(
-                color: Color(0xFF111827),
-                fontSize: 23,
-                fontWeight: FontWeight.w900,
-              ),
-            ),
+    return Scaffold(
+      backgroundColor: const Color(0xFFF8F6F1),
+      appBar: AppBar(
+        backgroundColor: const Color(0xFFF8F6F1),
+        elevation: 0,
+        surfaceTintColor: const Color(0xFFF8F6F1),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_rounded),
+          onPressed: () => Navigator.pop(context),
+        ),
+        title: Text(
+          '$title (${cases.length})',
+          style: const TextStyle(
+            color: Color(0xFF111827),
+            fontSize: 23,
+            fontWeight: FontWeight.w900,
           ),
-          body: cases.isEmpty
-              ? Center(
-                  child: Text(
-                    status == 'approved'
-                        ? 'No approved cases yet.'
-                        : 'No pending cases.',
-                    style: const TextStyle(
-                      fontSize: 16,
-                      color: Color(0xFF7A7A7A),
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                )
-              : ListView.separated(
-                  padding: const EdgeInsets.all(16),
-                  itemCount: cases.length,
-                  separatorBuilder: (_, __) => const SizedBox(height: 12),
-                  itemBuilder: (context, index) {
-                    final item = cases[index];
+        ),
+        actions: [
+          IconButton(
+            onPressed: _loadCases,
+            icon: const Icon(Icons.refresh_rounded),
+          ),
+        ],
+      ),
+      body: isLoading
+          ? const Center(
+              child: CircularProgressIndicator(
+                color: Color(0xFFF1C84B),
+              ),
+            )
+          : errorMessage != null
+              ? Center(child: Text(errorMessage!))
+              : cases.isEmpty
+                  ? Center(
+                      child: Text(
+                        isApproved
+                            ? 'No approved cases yet.'
+                            : 'No pending cases.',
+                        style: const TextStyle(
+                          fontSize: 16,
+                          color: Color(0xFF7A7A7A),
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    )
+                  : RefreshIndicator(
+                      color: const Color(0xFFF1C84B),
+                      onRefresh: _loadCases,
+                      child: ListView.separated(
+                        padding: const EdgeInsets.all(16),
+                        itemCount: cases.length,
+                        separatorBuilder: (_, __) =>
+                            const SizedBox(height: 12),
+                        itemBuilder: (context, index) {
+                          final item = cases[index];
 
-                    return _CaseTile(
-                      feedback: item,
-                      onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (_) => BlocProvider.value(
-                              value: context.read<ManagerDashboardBloc>(),
-                              child: ManagerReviewIssuePage(
-                                feedback: item,
-                                isReadOnly: status == 'approved',
-                              ),
-                            ),
-                          ),
-                        );
-                      },
-                    );
-                  },
-                ),
-        );
-      },
+                          return _CaseTile(
+                            feedback: item,
+                            onTap: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) => ManagerReviewIssuePage(
+                                    feedback: item,
+                                    isReadOnly: isApproved,
+                                  ),
+                                ),
+                              ).then((_) => _loadCases());
+                            },
+                          );
+                        },
+                      ),
+                    ),
     );
   }
 }

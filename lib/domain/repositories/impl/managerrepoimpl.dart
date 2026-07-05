@@ -42,18 +42,21 @@ class ManagerRepositoryImpl implements ManagerRepository {
   }
 
   @override
-Future<List<FeedbackIssue>> getFeedbacksByStatus(String status) async {
-  final response = await apiClient.dio.get(
-    '/manager/feedback',
-    queryParameters: {
-      'status': status,
-    },
-  );
+  Future<List<FeedbackIssue>> getFeedbacksByStatus(String status) async {
+    try {
+      final response = await apiClient.dio.get(
+        '/manager/feedback',
+        queryParameters: {'status': status},
+      );
 
-  final List feedbacks = response.data['feedbacks'] ?? [];
+      final List<dynamic> list = response.data["feedbacks"];
 
-  return feedbacks
-      .map((json) => FeedbackIssue.fromJson(json))
-      .toList();
-}
+      return list.map((e) => FeedbackIssue.fromJson(e)).toList();
+    } catch (e, stackTrace) {
+      print("========== ERROR ==========");
+      print(e);
+      print(stackTrace);
+      rethrow; // Rethrow the exception to be handled by the caller
+    }
+  }
 }
