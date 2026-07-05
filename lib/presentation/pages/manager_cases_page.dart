@@ -1,18 +1,17 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:maintai/ApiClient.dart';
 import 'package:maintai/domain/entities/feedback_isssues.dart';
 import 'package:maintai/domain/repositories/impl/managerrepoimpl.dart';
 import 'package:maintai/domain/usecase/getFeedbackByStatus.dart';
+import 'package:maintai/presentation/bloc/manager_dashboard_bloc.dart';
 import 'package:maintai/presentation/pages/manager_review_issue.dart';
 import 'package:maintai/storage/tokenStorage.dart';
 
 class ManagerCasesPage extends StatefulWidget {
   final String status;
 
-  const ManagerCasesPage({
-    super.key,
-    required this.status,
-  });
+  const ManagerCasesPage({super.key, required this.status});
 
   @override
   State<ManagerCasesPage> createState() => _ManagerCasesPageState();
@@ -91,53 +90,60 @@ class _ManagerCasesPageState extends State<ManagerCasesPage> {
       ),
       body: isLoading
           ? const Center(
-              child: CircularProgressIndicator(
-                color: Color(0xFFF1C84B),
-              ),
+              child: CircularProgressIndicator(color: Color(0xFFF1C84B)),
             )
           : errorMessage != null
-              ? Center(child: Text(errorMessage!))
-              : cases.isEmpty
-                  ? Center(
-                      child: Text(
-                        isApproved
-                            ? 'No approved cases yet.'
-                            : 'No pending cases.',
-                        style: const TextStyle(
-                          fontSize: 16,
-                          color: Color(0xFF7A7A7A),
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    )
-                  : RefreshIndicator(
-                      color: const Color(0xFFF1C84B),
-                      onRefresh: _loadCases,
-                      child: ListView.separated(
-                        padding: const EdgeInsets.all(16),
-                        itemCount: cases.length,
-                        separatorBuilder: (_, __) =>
-                            const SizedBox(height: 12),
-                        itemBuilder: (context, index) {
-                          final item = cases[index];
+          ? Center(child: Text(errorMessage!))
+          : cases.isEmpty
+          ? Center(
+              child: Text(
+                isApproved ? 'No approved cases yet.' : 'No pending cases.',
+                style: const TextStyle(
+                  fontSize: 16,
+                  color: Color(0xFF7A7A7A),
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            )
+          : RefreshIndicator(
+              color: const Color(0xFFF1C84B),
+              onRefresh: _loadCases,
+              child: ListView.separated(
+                padding: const EdgeInsets.all(16),
+                itemCount: cases.length,
+                separatorBuilder: (_, __) => const SizedBox(height: 12),
+                itemBuilder: (context, index) {
+                  final item = cases[index];
 
-                          return _CaseTile(
-                            feedback: item,
-                            onTap: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (_) => ManagerReviewIssuePage(
-                                    feedback: item,
-                                    isReadOnly: isApproved,
-                                  ),
-                                ),
-                              ).then((_) => _loadCases());
-                            },
-                          );
-                        },
-                      ),
-                    ),
+                  return _CaseTile(
+                    feedback: item,
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) {
+                            if (isApproved) {
+                              return ManagerReviewIssuePage(
+                                feedback: item,
+                                isReadOnly: true,
+                              );
+                            }
+
+                            return BlocProvider.value(
+                              value: context.read<ManagerDashboardBloc>(),
+                              child: ManagerReviewIssuePage(
+                                feedback: item,
+                                isReadOnly: false,
+                              ),
+                            );
+                          },
+                        ),
+                      ).then((_) => _loadCases());
+                    },
+                  );
+                },
+              ),
+            ),
     );
   }
 }
@@ -146,10 +152,7 @@ class _CaseTile extends StatelessWidget {
   final FeedbackIssue feedback;
   final VoidCallback onTap;
 
-  const _CaseTile({
-    required this.feedback,
-    required this.onTap,
-  });
+  const _CaseTile({required this.feedback, required this.onTap});
 
   @override
   Widget build(BuildContext context) {
@@ -168,8 +171,9 @@ class _CaseTile extends StatelessWidget {
         child: Row(
           children: [
             CircleAvatar(
-              backgroundColor:
-                  isApproved ? const Color(0xFFDCFCE7) : const Color(0xFFFFF7ED),
+              backgroundColor: isApproved
+                  ? const Color(0xFFDCFCE7)
+                  : const Color(0xFFFFF7ED),
               child: Icon(
                 isApproved
                     ? Icons.check_circle_rounded
