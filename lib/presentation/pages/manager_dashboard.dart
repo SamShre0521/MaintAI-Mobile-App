@@ -14,6 +14,7 @@ import 'package:maintai/presentation/bloc/manager_dashboard_state.dart';
 import 'package:maintai/presentation/pages/app_sidebar.dart';
 import 'package:maintai/presentation/pages/auth.dart';
 import 'package:maintai/presentation/pages/manager_review_issue.dart';
+import 'package:maintai/presentation/pages/upload_machines_document.dart';
 import 'package:maintai/storage/tokenStorage.dart';
 import 'package:maintai/domain/usecase/getMachines.dart';
 import 'package:maintai/domain/usecase/sendChatMessage.dart';
@@ -50,7 +51,14 @@ class ManagerDashboardPage extends StatelessWidget {
             userName: 'Manager',
             userRole: 'Manager',
 
-            historyItems: const [],
+            historyItems: state.sessions
+                .map(
+                  (session) => ChatHistoryItem(
+                    sessionId: session.sessionId,
+                    title: session.title,
+                  ),
+                )
+                .toList(),
             onManagerDashboard: () {
               Navigator.pop(context);
             },
@@ -88,12 +96,23 @@ class ManagerDashboardPage extends StatelessWidget {
               );
             },
 
-            onSelectHistory: (_) {},
+            onSelectHistory: (sessionId) {
+              Navigator.of(context).pop();
+              context.read<AssistantChatBloc>().add(
+                LoadSessionMessagesEvent(sessionId),
+              );
+            },
             onMachines: () {
               Navigator.pop(context);
             },
+
             onUploads: () {
-              Navigator.pop(context);
+              Navigator.of(context).pop();
+
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const UploadMachinePage()),
+              );
             },
             onSettings: () {
               Navigator.pop(context);

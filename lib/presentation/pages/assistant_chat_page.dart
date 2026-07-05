@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:maintai/domain/entities/chat_message.dart';
+import 'package:maintai/domain/repositories/impl/assistantrepoimpl.dart';
 import 'package:maintai/domain/repositories/impl/managerrepoimpl.dart';
 import 'package:maintai/domain/usecase/approve_Feedback.dart';
 import 'package:maintai/domain/usecase/getFeedbackByStatus.dart';
 import 'package:maintai/domain/usecase/getPendingFeedbacks.dart';
+import 'package:maintai/domain/usecase/getSessions.dart';
 import 'package:maintai/domain/usecase/reject_Feedback.dart';
 import 'package:maintai/presentation/bloc/assistant_chat_event.dart';
 import 'package:maintai/presentation/bloc/assistant_chat_state.dart';
@@ -193,6 +195,9 @@ class _AssistantChatPageState extends State<AssistantChatPage> {
                     final tokenStorage = TokenStorage();
                     final apiClient = ApiClient(tokenStorage);
                     final managerRepository = ManagerRepositoryImpl(apiClient);
+                    final assistantRepository = AssistantRepositoryImpl(
+                      apiClient,
+                    );
 
                     Navigator.pushReplacement(
                       context,
@@ -207,6 +212,7 @@ class _AssistantChatPageState extends State<AssistantChatPage> {
                             getFeedbackByStatus: GetFeedbacksByStatus(
                               managerRepository,
                             ),
+                            getSessions: GetSessions(assistantRepository),
                           )..add(LoadManagerDashboardEvent()),
                           child: const ManagerDashboardPage(),
                         ),

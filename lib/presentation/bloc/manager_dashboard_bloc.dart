@@ -1,6 +1,7 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:maintai/domain/usecase/approve_Feedback.dart';
 import 'package:maintai/domain/usecase/getPendingFeedbacks.dart';
+import 'package:maintai/domain/usecase/getSessions.dart';
 import 'package:maintai/domain/usecase/reject_Feedback.dart';
 import 'manager_dashboard_event.dart';
 import 'manager_dashboard_state.dart';
@@ -12,11 +13,13 @@ class ManagerDashboardBloc
   final ApproveFeedback approveFeedback;
   final RejectFeedback rejectFeedback;
   final GetFeedbacksByStatus getFeedbackByStatus;
+  final GetSessions getSessions;
   ManagerDashboardBloc({
     required this.getPendingFeedbacks,
     required this.approveFeedback,
     required this.rejectFeedback,
     required this.getFeedbackByStatus,
+    required this.getSessions,
   }) : super(const ManagerDashboardState()) {
     on<LoadManagerDashboardEvent>(_onLoadDashboard);
     on<ApproveFeedbackEvent>(_onApproveFeedback);
@@ -32,6 +35,7 @@ class ManagerDashboardBloc
   try {
     final pending = await getPendingFeedbacks.repository.getFeedbacksByStatus('pending');
     final approved = await getPendingFeedbacks.repository.getFeedbacksByStatus('approved');
+    final sessions = await getSessions();
 
     emit(
       state.copyWith(
@@ -39,6 +43,7 @@ class ManagerDashboardBloc
         pendingFeedbacks: pending,
         approvedFeedbacks: approved,
         clearError: true,
+        sessions: sessions,
       ),
     );
   } catch (e) {

@@ -199,12 +199,9 @@ class AppSidebar extends StatelessWidget {
                       icon: Icons.image_outlined,
                       title: 'Upload Machine Data',
                       onTap: onUploads,
+                      
+                      
                     ),
-                    // _tile(
-                    //   icon: Icons.settings_outlined,
-                    //   title: 'Settings',
-                    //   onTap: onSettings,
-                    // ),
                   ],
                 ),
               ),

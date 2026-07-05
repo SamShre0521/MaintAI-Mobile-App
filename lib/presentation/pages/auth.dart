@@ -94,7 +94,7 @@ class _AuthPageState extends State<AuthPage> {
 
               if (state.user.role.toLowerCase() == 'manager') {
                 final managerRepository = ManagerRepositoryImpl(apiClient);
-
+                final assistantRepository = AssistantRepositoryImpl(apiClient);
                 Navigator.pushReplacement(
                   context,
                   MaterialPageRoute(
@@ -105,6 +105,8 @@ class _AuthPageState extends State<AuthPage> {
                         ),
                         approveFeedback: ApproveFeedback(managerRepository),
                           getFeedbackByStatus: GetFeedbacksByStatus(managerRepository),
+                            getSessions: GetSessions(assistantRepository),
+
 
                         rejectFeedback: RejectFeedback(managerRepository),
                       )..add(LoadManagerDashboardEvent()),
