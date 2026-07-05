@@ -9,4 +9,5 @@ class GetPendingFeedbacks {
   Future<List<FeedbackIssue>> call() {
     return repository.getPendingFeedbacks();
   }
+  
 }

@@ -22,6 +22,7 @@ import 'package:maintai/domain/usecase/getSessionMessages.dart';
 import 'package:maintai/presentation/bloc/assitant_chat_bloc.dart';
 import 'package:maintai/presentation/bloc/assistant_chat_event.dart';
 import 'package:maintai/presentation/pages/assistant_chat_page.dart';
+import 'package:maintai/presentation/pages/manager_cases_page.dart';
 
 class ManagerDashboardPage extends StatelessWidget {
   const ManagerDashboardPage({super.key});
@@ -48,7 +49,7 @@ class ManagerDashboardPage extends StatelessWidget {
           drawer: AppSidebar(
             userName: 'Manager',
             userRole: 'Manager',
-            
+
             historyItems: const [],
             onManagerDashboard: () {
               Navigator.pop(context);
@@ -60,7 +61,9 @@ class ManagerDashboardPage extends StatelessWidget {
               final apiClient = ApiClient(tokenStorage);
               final assistantRepository = AssistantRepositoryImpl(apiClient);
               final feedbackRepository = feedbackrepoimpl(apiClient: apiClient);
-              final submitFeedback = SubmitFeedback(feedbackrepository: feedbackRepository);
+              final submitFeedback = SubmitFeedback(
+                feedbackrepository: feedbackRepository,
+              );
               Navigator.push(
                 context,
                 MaterialPageRoute(
@@ -84,7 +87,7 @@ class ManagerDashboardPage extends StatelessWidget {
                 ),
               );
             },
-            
+
             onSelectHistory: (_) {},
             onMachines: () {
               Navigator.pop(context);
@@ -126,14 +129,6 @@ class ManagerDashboardPage extends StatelessWidget {
             backgroundColor: const Color(0xFFF8F6F1),
             elevation: 0,
             surfaceTintColor: const Color(0xFFF8F6F1),
-            // leading: IconButton(
-            //   onPressed: () {},
-            //   icon: const Icon(
-            //     Icons.menu_rounded,
-            //     color: Color(0xFF2E2E2E),
-            //     size: 30,
-            //   ),
-            // ),
             leading: Builder(
               builder: (context) => IconButton(
                 onPressed: () => Scaffold.of(context).openDrawer(),
@@ -166,41 +161,6 @@ class ManagerDashboardPage extends StatelessWidget {
                 ),
               ],
             ),
-            // actions: [
-            //   Stack(
-            //     alignment: Alignment.topRight,
-            //     children: [
-            //       IconButton(
-            //         onPressed: () {},
-            //         icon: const Icon(
-            //           Icons.notifications_none_rounded,
-            //           color: Color(0xFF2E2E2E),
-            //           size: 30,
-            //         ),
-            //       ),
-            //       if (state.pendingCount > 0)
-            //         Positioned(
-            //           top: 8,
-            //           right: 8,
-            //           child: Container(
-            //             padding: const EdgeInsets.all(5),
-            //             decoration: const BoxDecoration(
-            //               color: Color(0xFFF1C84B),
-            //               shape: BoxShape.circle,
-            //             ),
-            //             child: Text(
-            //               state.pendingCount.toString(),
-            //               style: const TextStyle(
-            //                 color: Colors.white,
-            //                 fontSize: 10,
-            //                 fontWeight: FontWeight.w800,
-            //               ),
-            //             ),
-            //           ),
-            //         ),
-            //     ],
-            //   ),
-            // ],
           ),
           body: state.isLoading
               ? const Center(
@@ -267,13 +227,13 @@ class ManagerDashboardPage extends StatelessWidget {
                             subtitle: 'Approved issues',
                             subtitleColor: const Color(0xFF16A34A),
                           ),
-                          const _MetricCard(
-                            icon: Icons.hourglass_bottom_rounded,
-                            iconColor: Color(0xFF7C3AED),
-                            title: 'Avg. Review',
-                            value: '--',
-                            subtitle: 'Coming soon',
-                            subtitleColor: Color(0xFF7A7A7A),
+                          _MetricCard(
+                            icon: Icons.library_books_rounded,
+                            iconColor: const Color(0xFF7C3AED),
+                            title: 'Knowledge Base',
+                            value: '${state.approvedCount}',
+                            subtitle: 'Stored solutions',
+                            subtitleColor: const Color(0xFF7C3AED),
                           ),
                         ],
                       ),
@@ -347,12 +307,32 @@ class ManagerDashboardPage extends StatelessWidget {
                     icon: Icons.pending_actions_rounded,
                     label: 'Pending',
                     badge: state.pendingCount,
-                    onTap: () {},
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => BlocProvider.value(
+                            value: context.read<ManagerDashboardBloc>(),
+                            child: const ManagerCasesPage(status: 'pending'),
+                          ),
+                        ),
+                      );
+                    },
                   ),
                   _BottomNavItem(
                     icon: Icons.check_circle_outline_rounded,
                     label: 'Approved',
-                    onTap: () {},
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => BlocProvider.value(
+                            value: context.read<ManagerDashboardBloc>(),
+                            child: const ManagerCasesPage(status: 'approved'),
+                          ),
+                        ),
+                      );
+                    },
                   ),
                   _BottomNavItem(
                     icon: Icons.logout_rounded,

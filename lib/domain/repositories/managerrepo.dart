@@ -13,4 +13,5 @@ abstract class ManagerRepository {
     required String feedbackId,
     required String managerComment,
   });
+  Future<List<FeedbackIssue>> getFeedbacksByStatus(String status);
 }

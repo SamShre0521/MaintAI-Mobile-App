@@ -16,31 +16,6 @@ class ManagerRepositoryImpl implements ManagerRepository {
     return feedbacks.map((json) => FeedbackIssue.fromJson(json)).toList();
   }
 
-  // @override
-  // Future<void> approveFeedback({
-  //   required String feedbackId,
-  //   String? managerComment,
-  // }) async {
-  //   await apiClient.dio.patch(
-  //     '/feedbacks/$feedbackId/approve',
-  //     data: {
-  //       'managerComment': managerComment ?? '',
-  //     },
-  //   );
-  // }
-
-  // @override
-  // Future<void> rejectFeedback({
-  //   required String feedbackId,
-  //   required String managerComment,
-  // }) async {
-  //   await apiClient.dio.patch(
-  //     '/feedbacks/$feedbackId/reject',
-  //     data: {
-  //       'managerComment': managerComment,
-  //     },
-  //   );
-  // }
   @override
   Future<void> approveFeedback({
     required String feedbackId,
@@ -65,4 +40,20 @@ class ManagerRepositoryImpl implements ManagerRepository {
       data: {'managerStatus': 'rejected', 'managerComment': managerComment},
     );
   }
+
+  @override
+Future<List<FeedbackIssue>> getFeedbacksByStatus(String status) async {
+  final response = await apiClient.dio.get(
+    '/manager/feedback',
+    queryParameters: {
+      'status': status,
+    },
+  );
+
+  final List feedbacks = response.data['feedbacks'] ?? [];
+
+  return feedbacks
+      .map((json) => FeedbackIssue.fromJson(json))
+      .toList();
+}
 }

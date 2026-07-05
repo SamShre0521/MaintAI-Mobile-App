@@ -51,60 +51,106 @@ class AssistantChatBloc extends Bloc<AssistantChatEvent, AssistantChatState> {
       ),
     );
   }
-  Future<void> _onSubmitFeedback(
-  SubmitFeedbackEvent event,
-  Emitter<AssistantChatState> emit,
-) async {
-  try {
-    if (state.sessionId == null) return;
-    if (state.messages.length < 2) return;
+  //   Future<void> _onSubmitFeedback(
+  //   SubmitFeedbackEvent event,
+  //   Emitter<AssistantChatState> emit,
+  // ) async {
+  //   try {
+  //     if (state.sessionId == null) return;
+  //     if (state.messages.length < 2) return;
 
-    final firstUserMessage = state.messages.firstWhere(
-      (m) => m.isUser,
-    );
+  //     final firstUserMessage = state.messages.firstWhere(
+  //       (m) => m.isUser,
+  //     );
 
-    final lastAiMessage = state.messages.lastWhere(
-      (m) => !m.isUser,
-    );
+  //     final lastAiMessage = state.messages.lastWhere(
+  //       (m) => !m.isUser,
+  //     );
 
-    await submitFeedback(
-      FeedbackRequest(
-        sessionId: state.sessionId!,
-        question: firstUserMessage.text,
-        answer: lastAiMessage.text,
-        engineerFeedback:
-            event.resolved ? "correct" : "incorrect",
-      ),
-    );
+  //     await submitFeedback(
+  //       FeedbackRequest(
+  //         sessionId: state.sessionId!,
+  //         question: firstUserMessage.text,
+  //         answer: lastAiMessage.text,
+  //         engineerFeedback:
+  //             event.resolved ? "correct" : "incorrect",
+  //       ),
+  //     );
 
-    emit(
-      state.copyWith(
-        isIssueResolved: event.resolved,
-        showResolutionPrompt: false,
-        isExpanded: false,
-        clearError: true,
-      ),
-    );
-  } catch (_) {
-    emit(
-      state.copyWith(
-        errorMessage: 'Failed to submit feedback',
-      ),
-    );
-  }
-}
+  //     emit(
+  //       state.copyWith(
+  //         isIssueResolved: event.resolved,
+  //         showResolutionPrompt: false,
+  //         isExpanded: false,
+  //         clearError: true,
+  //       ),
+  //     );
+  //   } catch (_) {
+  //     emit(
+  //       state.copyWith(
+  //         errorMessage: 'Failed to submit feedback',
+  //       ),
+  //     );
+  //   }
+  // }
 
+  // void _onContinueIssue(
+  //   ContinueIssueEvent event,
+  //   Emitter<AssistantChatState> emit,
+  // ) {
+  //   emit(
+  //     state.copyWith(
+  //       isIssueResolved: false,
+  //       showResolutionPrompt: false,
+  //       clearError: true,
+  //     ),
+  //   );
+  // }
   void _onContinueIssue(
     ContinueIssueEvent event,
     Emitter<AssistantChatState> emit,
   ) {
     emit(
       state.copyWith(
-        isIssueResolved: false,
         showResolutionPrompt: false,
+        isIssueResolved: false,
         clearError: true,
       ),
     );
+  }
+
+  Future<void> _onSubmitFeedback(
+    SubmitFeedbackEvent event,
+    Emitter<AssistantChatState> emit,
+  ) async {
+    try {
+      if (state.sessionId == null) return;
+      if (state.messages.length < 2) return;
+
+      final firstUserMessage = state.messages.firstWhere((m) => m.isUser);
+
+      final lastAiMessage = state.messages.lastWhere((m) => !m.isUser);
+
+      await submitFeedback(
+        FeedbackRequest(
+          sessionId: state.sessionId!,
+          question: firstUserMessage.text,
+          answer: lastAiMessage.text,
+          engineerFeedback: event.resolved ? "correct" : "incorrect",
+        ),
+      );
+
+      emit(
+        state.copyWith(
+          isIssueResolved: event.resolved,
+          showResolutionPrompt: false,
+          isExpanded: false,
+          clearError: true,
+        ),
+      );
+    } catch (_) {
+      emit(state.copyWith(errorMessage: 'Failed to submit feedback'));
+    }
   }
 
   Future<void> _onLoadMachines(
@@ -133,6 +179,8 @@ class AssistantChatBloc extends Bloc<AssistantChatEvent, AssistantChatState> {
       );
     }
   }
+
+  
 
   void _onToggleExpanded(
     ToggleExpandedComposerEvent event,
@@ -255,44 +303,47 @@ class AssistantChatBloc extends Bloc<AssistantChatEvent, AssistantChatState> {
     emit(state.copyWith(messages: updatedMessages, clearError: true));
   }
 
-//   void _onStartNewChat(
-//   StartNewChatEvent event,
-//   Emitter<AssistantChatState> emit,
-// ) {
-//   emit(
-//     AssistantChatState(
-//       machines: state.machines,
-//       selectedMachine: state.machines.isNotEmpty ? state.machines.first : null,
-//       sessions: state.sessions,
-//       isSessionLoading: state.isSessionLoading,
-//       showResolutionPrompt: false,
-//       isIssueResolved: false,
-//       isExpanded: false,
-//       isAiTyping: false,
-//       sessionId: null,
-//     ),
-//   );
-// }
+  //   void _onStartNewChat(
+  //   StartNewChatEvent event,
+  //   Emitter<AssistantChatState> emit,
+  // ) {
+  //   emit(
+  //     AssistantChatState(
+  //       machines: state.machines,
+  //       selectedMachine: state.machines.isNotEmpty ? state.machines.first : null,
+  //       sessions: state.sessions,
+  //       isSessionLoading: state.isSessionLoading,
+  //       showResolutionPrompt: false,
+  //       isIssueResolved: false,
+  //       isExpanded: false,
+  //       isAiTyping: false,
+  //       sessionId: null,
+  //     ),
+  //   );
+  // }
 
-void _onStartNewChat(
-  StartNewChatEvent event,
-  Emitter<AssistantChatState> emit,
-) {
-  emit(
-    AssistantChatState(
-      machines: state.machines,
-      selectedMachine: state.machines.isNotEmpty ? state.machines.first : null,
-      sessions: state.sessions,
-      isSessionLoading: state.isSessionLoading,
-      showResolutionPrompt: false,
-      isIssueResolved: false,
-      isExpanded: false,
-      isAiTyping: false,
-      sessionId: null,
-      isHistoryMode: false,
-    ),
-  );
-}
+  void _onStartNewChat(
+    StartNewChatEvent event,
+    Emitter<AssistantChatState> emit,
+  ) {
+    emit(
+      AssistantChatState(
+        machines: state.machines,
+        selectedMachine: state.machines.isNotEmpty
+            ? state.machines.first
+            : null,
+        sessions: state.sessions,
+        isSessionLoading: state.isSessionLoading,
+        showResolutionPrompt: false,
+        isIssueResolved: false,
+        isExpanded: false,
+        isAiTyping: false,
+        sessionId: null,
+        isHistoryMode: false,
+      ),
+    );
+  }
+
   Future<void> _onLoadSessions(
     LoadSessionsEvent event,
     Emitter<AssistantChatState> emit,

@@ -16,104 +16,79 @@ class IssueResolutionPrompt extends StatelessWidget {
       margin: const EdgeInsets.fromLTRB(0, 4, 0, 14),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: const Color(0xFFF8F6FF),
+        color: const Color(0xFFFFFBEB),
         borderRadius: BorderRadius.circular(22),
-        border: Border.all(color: const Color(0xFFE4DCC8)),
-        boxShadow: const [
-          BoxShadow(
-            color: Color(0x0D000000),
-            blurRadius: 10,
-            offset: Offset(0, 3),
-          ),
-        ],
+        border: Border.all(color: const Color(0xFFFDE68A)),
       ),
       child: Column(
         children: [
           const Text(
-            'Is your issue resolved?',
+            'Was this solution helpful?',
             textAlign: TextAlign.center,
             style: TextStyle(
               fontSize: 18,
-              fontWeight: FontWeight.w700,
-              color: Color(0xFF2E2E2E),
+              fontWeight: FontWeight.w800,
+              color: Color(0xFF111827),
+            ),
+          ),
+          const SizedBox(height: 6),
+          const Text(
+            'Confirm whether the issue is resolved or continue troubleshooting.',
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontSize: 13,
+              height: 1.35,
+              color: Color(0xFF6B7280),
+              fontWeight: FontWeight.w500,
             ),
           ),
           const SizedBox(height: 14),
-          Row(
-            children: [
-              Expanded(
-                child: _ResolutionButton(
-                  icon: Icons.thumb_up_alt_rounded,
-                  iconColor: Color(0xFF22C55E),
-                  text: 'Yes, resolved',
-                  onTap: onResolved,
+
+          SizedBox(
+            width: double.infinity,
+            height: 50,
+            child: ElevatedButton.icon(
+              onPressed: onResolved,
+              icon: const Icon(Icons.check_circle_rounded),
+              label: const Text('Resolved'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF22C55E),
+                foregroundColor: Colors.white,
+                elevation: 0,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                textStyle: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w800,
                 ),
               ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: _ResolutionButton(
-                  icon: Icons.thumb_down_alt_rounded,
-                  iconColor: Color(0xFFEF4444),
-                  text: 'No, not resolved',
-                  onTap: onNotResolved,
+            ),
+          ),
+
+          const SizedBox(height: 10),
+
+          SizedBox(
+            width: double.infinity,
+            height: 50,
+            child: OutlinedButton.icon(
+              onPressed: onNotResolved,
+              icon: const Icon(Icons.chat_bubble_outline_rounded),
+              label: const Text('Continue Chat'),
+              style: OutlinedButton.styleFrom(
+                foregroundColor: const Color(0xFF2E2E2E),
+                side: const BorderSide(color: Color(0xFFE4DCC8)),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                textStyle: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w800,
                 ),
               ),
-            ],
+            ),
           ),
         ],
-      ),
-    );
-  }
-}
-
-class _ResolutionButton extends StatelessWidget {
-  final IconData icon;
-  final Color iconColor;
-  final String text;
-  final VoidCallback onTap;
-
-  const _ResolutionButton({
-    required this.icon,
-    required this.iconColor,
-    required this.text,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Material(
-      color: Colors.white,
-      borderRadius: BorderRadius.circular(16),
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(16),
-        child: Container(
-          height: 52,
-          padding: const EdgeInsets.symmetric(horizontal: 10),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: const Color(0xFFE4DCC8)),
-          ),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(icon, color: iconColor, size: 22),
-              const SizedBox(width: 8),
-              Flexible(
-                child: Text(
-                  text,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w700,
-                    color: Color(0xFF2E2E2E),
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
       ),
     );
   }

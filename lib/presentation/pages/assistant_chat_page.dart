@@ -48,12 +48,13 @@ class _AssistantChatPageState extends State<AssistantChatPage> {
     super.initState();
     _loadUserInfo();
   }
-void _startNewChat() {
-  issueController.clear();
-  FocusScope.of(context).unfocus();
 
-  context.read<AssistantChatBloc>().add(StartNewChatEvent());
-}
+  void _startNewChat() {
+    issueController.clear();
+    FocusScope.of(context).unfocus();
+
+    context.read<AssistantChatBloc>().add(StartNewChatEvent());
+  }
 
   Future<void> _loadUserInfo() async {
     final storage = TokenStorage();
@@ -165,95 +166,97 @@ void _startNewChat() {
           //   },
           // ),
           drawer: AppSidebar(
-  userName: userName,
-  userRole: userRole,
-  historyItems: state.sessions
-      .map(
-        (session) => ChatHistoryItem(
-          sessionId: session.sessionId,
-          title: session.title,
-        ),
-      )
-      .toList(),
+            userName: userName,
+            userRole: userRole,
+            historyItems: state.sessions
+                .map(
+                  (session) => ChatHistoryItem(
+                    sessionId: session.sessionId,
+                    title: session.title,
+                  ),
+                )
+                .toList(),
 
-  onNewChat: () {
-    final bloc = context.read<AssistantChatBloc>();
-    Navigator.of(context).pop();
-    bloc.add(StartNewChatEvent());
-    issueController.clear();
-    FocusScope.of(context).unfocus();
-  },
+            onNewChat: () {
+              final bloc = context.read<AssistantChatBloc>();
+              Navigator.of(context).pop();
+              bloc.add(StartNewChatEvent());
+              issueController.clear();
+              FocusScope.of(context).unfocus();
+            },
 
-  onManagerDashboard: userRole.toLowerCase() == 'manager'
-      ? () {
-          Navigator.pop(context);
+            onManagerDashboard: userRole.toLowerCase() == 'manager'
+                ? () {
+                    Navigator.pop(context);
 
-          final tokenStorage = TokenStorage();
-          final apiClient = ApiClient(tokenStorage);
-          final managerRepository = ManagerRepositoryImpl(apiClient);
+                    final tokenStorage = TokenStorage();
+                    final apiClient = ApiClient(tokenStorage);
+                    final managerRepository = ManagerRepositoryImpl(apiClient);
 
-          Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(
-              builder: (_) => BlocProvider(
-                create: (_) => ManagerDashboardBloc(
-                  getPendingFeedbacks: GetPendingFeedbacks(managerRepository),
-                  approveFeedback: ApproveFeedback(managerRepository),
-                  rejectFeedback: RejectFeedback(managerRepository),
-                )..add(LoadManagerDashboardEvent()),
-                child: const ManagerDashboardPage(),
-              ),
-            ),
-          );
-        }
-      : null,
+                    Navigator.pushReplacement(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => BlocProvider(
+                          create: (_) => ManagerDashboardBloc(
+                            getPendingFeedbacks: GetPendingFeedbacks(
+                              managerRepository,
+                            ),
+                            approveFeedback: ApproveFeedback(managerRepository),
+                            rejectFeedback: RejectFeedback(managerRepository),
+                          )..add(LoadManagerDashboardEvent()),
+                          child: const ManagerDashboardPage(),
+                        ),
+                      ),
+                    );
+                  }
+                : null,
 
-  onSelectHistory: (sessionId) {
-    Navigator.of(context).pop();
-    context.read<AssistantChatBloc>().add(
-          LoadSessionMessagesEvent(sessionId),
-        );
-  },
+            onSelectHistory: (sessionId) {
+              Navigator.of(context).pop();
+              context.read<AssistantChatBloc>().add(
+                LoadSessionMessagesEvent(sessionId),
+              );
+            },
 
-  onMachines: () {
-    Navigator.of(context).pop();
-  },
+            onMachines: () {
+              Navigator.of(context).pop();
+            },
 
-  onUploads: () {
-    Navigator.of(context).pop();
-  },
+            onUploads: () {
+              Navigator.of(context).pop();
+            },
 
-  onSettings: () {
-    Navigator.of(context).pop();
-  },
+            onSettings: () {
+              Navigator.of(context).pop();
+            },
 
-  onLogout: () async {
-    Navigator.of(context).pop();
+            onLogout: () async {
+              Navigator.of(context).pop();
 
-    await TokenStorage().clearToken();
+              await TokenStorage().clearToken();
 
-    if (!context.mounted) return;
+              if (!context.mounted) return;
 
-    Navigator.of(context).pushAndRemoveUntil(
-      MaterialPageRoute(
-        builder: (_) => BlocProvider(
-          create: (_) {
-            final tokenStorage = TokenStorage();
-            final apiClient = ApiClient(tokenStorage);
-            final repository = Authrepoimpl(apiClient, tokenStorage);
+              Navigator.of(context).pushAndRemoveUntil(
+                MaterialPageRoute(
+                  builder: (_) => BlocProvider(
+                    create: (_) {
+                      final tokenStorage = TokenStorage();
+                      final apiClient = ApiClient(tokenStorage);
+                      final repository = Authrepoimpl(apiClient, tokenStorage);
 
-            return AuthBloc(
-              LoginUseCase(repository),
-              SignupUseCase(repository),
-            );
-          },
-          child: const AuthPage(),
-        ),
-      ),
-      (route) => false,
-    );
-  },
-),
+                      return AuthBloc(
+                        LoginUseCase(repository),
+                        SignupUseCase(repository),
+                      );
+                    },
+                    child: const AuthPage(),
+                  ),
+                ),
+                (route) => false,
+              );
+            },
+          ),
           appBar: AppBar(
             backgroundColor: const Color(0xFFF8F6F1),
             elevation: 0,
@@ -361,21 +364,37 @@ void _startNewChat() {
                     //   );
                     // }
 
+                    // if (state.showResolutionPrompt &&
+                    //     adjustedIndex == promptIndex) {
+                    //   return IssueResolutionPrompt(
+                    //     onResolved: () {
+                    //       context.read<AssistantChatBloc>().add(
+                    //         SubmitFeedbackEvent(true),
+                    //       );
+                    //     },
+                    //     onNotResolved: () {
+                    //       context.read<AssistantChatBloc>().add(
+                    //         SubmitFeedbackEvent(false),
+                    //       );
+                    //     },
+                    //   );
+                    // }
+
                     if (state.showResolutionPrompt &&
-    adjustedIndex == promptIndex) {
-  return IssueResolutionPrompt(
-    onResolved: () {
-      context.read<AssistantChatBloc>().add(
-        SubmitFeedbackEvent(true),
-      );
-    },
-    onNotResolved: () {
-      context.read<AssistantChatBloc>().add(
-        SubmitFeedbackEvent(false),
-      );
-    },
-  );
-}
+                        adjustedIndex == promptIndex) {
+                      return IssueResolutionPrompt(
+                        onResolved: () {
+                          context.read<AssistantChatBloc>().add(
+                            SubmitFeedbackEvent(true),
+                          );
+                        },
+                        onNotResolved: () {
+                          context.read<AssistantChatBloc>().add(
+                            ContinueIssueEvent(),
+                          );
+                        },
+                      );
+                    }
 
                     return const SizedBox(height: 90);
                   },
@@ -417,37 +436,32 @@ void _startNewChat() {
                   );
                 },
                 child: state.isHistoryMode
-    ?  HistoryModeFooter(
-        onNewChat: _startNewChat,
-      )
-    : state.isIssueResolved
-        ? IssueResolvedFooter(
-            onNewChat: _startNewChat,
-          )
-        : state.sessionId == null
-            ? (state.isExpanded
-                ? ExpandedIssueCard(
-                    key: const ValueKey('expanded'),
-                    state: state,
-                    controller: issueController,
-                    onSend: _sendMessage,
-                  )
-                : CompactBottomBar(
-                    key: const ValueKey('compact'),
-                    onExpand: () {
-                      context.read<AssistantChatBloc>().add(
-                            ToggleExpandedComposerEvent(true),
-                          );
-                    },
-                  ))
-            : state.showResolutionPrompt
-                ? const SizedBox(
-                    key: ValueKey('waiting-resolution'),
-                    height: 0,
-                  )
-                : _chatInputBar(
-                    key: const ValueKey('chat'),
-                  ),
+                    ? HistoryModeFooter(onNewChat: _startNewChat)
+                    : state.isIssueResolved
+                    ? IssueResolvedFooter(onNewChat: _startNewChat)
+                    : state.sessionId == null
+                    ? (state.isExpanded
+                          ? ExpandedIssueCard(
+                              key: const ValueKey('expanded'),
+                              state: state,
+                              controller: issueController,
+                              onSend: _sendMessage,
+                            )
+                          : CompactBottomBar(
+                              key: const ValueKey('compact'),
+                              onExpand: () {
+                                context.read<AssistantChatBloc>().add(
+                                  ToggleExpandedComposerEvent(true),
+                                );
+                              },
+                            ))
+                    : state.showResolutionPrompt
+                    ? const SizedBox(
+                        key: ValueKey('waiting-resolution'),
+                        height: 0,
+                      )
+                    : _chatInputBar(key: const ValueKey('chat')),
+
                 // child: state.isIssueResolved
                 //     ? IssueResolvedFooter(onNewChat: _startNewChat)
                 //     : state.sessionId == null
@@ -472,7 +486,6 @@ void _startNewChat() {
                 //         height: 0,
                 //       )
                 //     : _chatInputBar(key: const ValueKey('chat')),
-              
               ),
             ),
           ),
