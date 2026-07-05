@@ -21,14 +21,17 @@ class Authrepoimpl implements Authrepo {
        final token = response.data["token"];
        final userName = response.data["user"]["name"];
        final userRole = response.data["user"]["role"];
+       final userDepartment = response.data["user"]["department"];
       await tokenStorage.saveToken(token);
       await tokenStorage.saveUserName(userName);
       await tokenStorage.saveUserRole(userRole);
+      await tokenStorage.saveUserDepartment(userDepartment);
       return User(
         response.data["user"]["email"] ?? "",
         response.data["user"]["name"] ?? "",
         response.data["user"]["role"] ?? "",
-        "",
+        response.data["user"]["password"] ?? "",
+        response.data["user"]["department"] ?? ""
       );
     } catch (e) {
       print("Login error: $e");
@@ -41,7 +44,7 @@ class Authrepoimpl implements Authrepo {
     print(
       "Signup called with email: ${user.email}, name: ${user.name}, role: ${user.role}",
     );
-
+    print("Department: ${user}");
     try {
       final response = await apiClient.dio.post(
         '/auth/signup',
@@ -49,7 +52,8 @@ class Authrepoimpl implements Authrepo {
           "name": user.name,
           "email": user.email,
           "password": user.password,
-          "role": user.role,
+          "department": user.department.toLowerCase(),
+          "role": user.role.toLowerCase(),
         },
       );
 
@@ -64,7 +68,8 @@ class Authrepoimpl implements Authrepo {
           userData["email"] ?? "",
           userData["name"] ?? "",
           userData["role"] ?? "",
-          "",
+          userData["password"] ?? "",
+          userData["department"] ?? ""
         );
       } else {
         throw Exception("Failed to signup");

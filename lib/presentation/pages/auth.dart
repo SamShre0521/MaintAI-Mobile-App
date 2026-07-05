@@ -40,7 +40,7 @@ class _AuthPageState extends State<AuthPage> {
   final passwordController = TextEditingController();
   final nameController = TextEditingController();
   final departmentController = TextEditingController();
-  
+  final roleController = TextEditingController();
 
   @override
   void dispose() {
@@ -48,6 +48,7 @@ class _AuthPageState extends State<AuthPage> {
     nameController.dispose();
     passwordController.dispose();
     departmentController.dispose();
+    roleController.dispose();
     super.dispose();
   }
 
@@ -58,13 +59,22 @@ class _AuthPageState extends State<AuthPage> {
       );
     } else {
       context.read<AuthBloc>().add(
+        // SignupEvent(
+        //   User(
+        //     emailController.text.trim(),
+        //     nameController.text.trim(),
+        //     'manager',
+        //     passwordController.text.trim(),
+        //   ),
+        // ),
         SignupEvent(
           User(
-            emailController.text.trim(),
-            nameController.text.trim(),
-            'manager',
-            passwordController.text.trim(),
-          ),
+    emailController.text.trim(),
+    nameController.text.trim(),
+    roleController.text.trim().toLowerCase(),
+    passwordController.text.trim(),
+    departmentController.text.trim().toLowerCase(),
+  ),
         ),
       );
     }
@@ -101,8 +111,12 @@ class _AuthPageState extends State<AuthPage> {
                 );
               } else {
                 final assistantRepository = AssistantRepositoryImpl(apiClient);
-                final feedbackRepository = feedbackrepoimpl(apiClient: apiClient);
-                final submitFeedback = SubmitFeedback(feedbackrepository: feedbackRepository);
+                final feedbackRepository = feedbackrepoimpl(
+                  apiClient: apiClient,
+                );
+                final submitFeedback = SubmitFeedback(
+                  feedbackrepository: feedbackRepository,
+                );
                 Navigator.pushReplacement(
                   context,
                   MaterialPageRoute(
@@ -190,18 +204,23 @@ class _AuthPageState extends State<AuthPage> {
                           hintText: 'Name',
                           prefixIcon: Icons.person_outline,
                         ),
+                        const SizedBox(height: 16),
+                        _buildTextField(
+                          controller: roleController,
+                          hintText: 'Role (Manager/Assistant)',
+                          prefixIcon: Icons.person_outline,
+                        ),
 
                         const SizedBox(height: 16),
-                         _buildTextField(
+                        _buildTextField(
                           controller: departmentController,
                           hintText: 'Department',
                           prefixIcon: Icons.library_books_outlined,
                         ),
 
                         const SizedBox(height: 16),
-
                       ],
-                      
+
                       _buildTextField(
                         controller: emailController,
                         hintText: 'Email',

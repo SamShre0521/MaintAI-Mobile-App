@@ -5,6 +5,7 @@ class TokenStorage {
   static const _tokenKey = 'auth_token';
   static const _userName='user_name';
   static const _role='user_role';
+  static const _userDepartment='user_department';
   Future<void> saveToken(String token) async {
     await _storage.write(key: _tokenKey, value: token);
   }
@@ -12,7 +13,12 @@ class TokenStorage {
   Future<String?> getToken() async {
     return await _storage.read(key: _tokenKey);
   }
-
+  Future<void> saveUserDepartment(String department) async {
+    await _storage.write(key: _userDepartment, value: department);
+  }
+  Future<String?> getUserDepartment() async {
+    return await _storage.read(key: _userDepartment);
+  }
   Future<void> clearToken() async {
     await _storage.deleteAll();
   }

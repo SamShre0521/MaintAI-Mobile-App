@@ -4,6 +4,7 @@ class User {
   final String name;
   final String role;
   final String password;
+  final String department;
 
-  User( this.email, this.name, this.role, this.password);
+  User( this.email, this.name, this.role, this.password, this.department);
 }
