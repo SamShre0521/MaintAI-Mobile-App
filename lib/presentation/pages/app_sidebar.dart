@@ -124,11 +124,11 @@ class AppSidebar extends StatelessWidget {
                       title: 'New Chat',
                       onTap: onNewChat,
                     ),
-                    _tile(
-                      icon: Icons.precision_manufacturing_outlined,
-                      title: 'Machines',
-                      onTap: onMachines,
-                    ),
+                    // _tile(
+                    //   icon: Icons.precision_manufacturing_outlined,
+                    //   title: 'Machines',
+                    //   onTap: onMachines,
+                    // ),
                     Theme(
                       data: Theme.of(
                         context,
@@ -195,12 +195,14 @@ class AppSidebar extends StatelessWidget {
                               }).toList(),
                       ),
                     ),
+                    if (userRole.toLowerCase() == 'manager' &&
+                        onManagerDashboard != null)
                     _tile(
                       icon: Icons.image_outlined,
                       title: 'Upload Machine Data',
                       onTap: onUploads,
                       
-                      
+
                     ),
                   ],
                 ),
