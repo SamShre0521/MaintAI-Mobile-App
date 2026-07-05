@@ -6,6 +6,7 @@ import 'package:maintai/domain/repositories/impl/assistantrepoimpl.dart';
 import 'package:maintai/domain/repositories/impl/feedbackrepoimpl.dart';
 import 'package:maintai/domain/repositories/impl/managerrepoimpl.dart';
 import 'package:maintai/domain/usecase/approve_Feedback.dart';
+import 'package:maintai/domain/usecase/getFeedbackByStatus.dart';
 import 'package:maintai/domain/usecase/getMachines.dart';
 import 'package:maintai/domain/usecase/getPendingFeedbacks.dart';
 import 'package:maintai/domain/usecase/reject_Feedback.dart';
@@ -103,6 +104,8 @@ class _AuthPageState extends State<AuthPage> {
                           managerRepository,
                         ),
                         approveFeedback: ApproveFeedback(managerRepository),
+                          getFeedbackByStatus: GetFeedbacksByStatus(managerRepository),
+
                         rejectFeedback: RejectFeedback(managerRepository),
                       )..add(LoadManagerDashboardEvent()),
                       child: const ManagerDashboardPage(),

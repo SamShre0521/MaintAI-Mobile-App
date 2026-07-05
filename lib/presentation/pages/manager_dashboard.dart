@@ -207,7 +207,7 @@ class ManagerDashboardPage extends StatelessWidget {
                             icon: Icons.chat_bubble_outline_rounded,
                             iconColor: const Color(0xFFF1C84B),
                             title: 'Total Feedbacks',
-                            value: '${state.pendingFeedbacks.length}',
+                            value: '${state.totalFeedbacks}',
                             subtitle: 'In your department',
                             subtitleColor: const Color(0xFF16A34A),
                           ),

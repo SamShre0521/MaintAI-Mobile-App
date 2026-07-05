@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:maintai/domain/entities/chat_message.dart';
 import 'package:maintai/domain/repositories/impl/managerrepoimpl.dart';
 import 'package:maintai/domain/usecase/approve_Feedback.dart';
+import 'package:maintai/domain/usecase/getFeedbackByStatus.dart';
 import 'package:maintai/domain/usecase/getPendingFeedbacks.dart';
 import 'package:maintai/domain/usecase/reject_Feedback.dart';
 import 'package:maintai/presentation/bloc/assistant_chat_event.dart';
@@ -203,6 +204,9 @@ class _AssistantChatPageState extends State<AssistantChatPage> {
                             ),
                             approveFeedback: ApproveFeedback(managerRepository),
                             rejectFeedback: RejectFeedback(managerRepository),
+                            getFeedbackByStatus: GetFeedbacksByStatus(
+                              managerRepository,
+                            ),
                           )..add(LoadManagerDashboardEvent()),
                           child: const ManagerDashboardPage(),
                         ),

@@ -4,17 +4,19 @@ import 'package:maintai/domain/usecase/getPendingFeedbacks.dart';
 import 'package:maintai/domain/usecase/reject_Feedback.dart';
 import 'manager_dashboard_event.dart';
 import 'manager_dashboard_state.dart';
+import 'package:maintai/domain/usecase/getFeedbackByStatus.dart';
 
 class ManagerDashboardBloc
     extends Bloc<ManagerDashboardEvent, ManagerDashboardState> {
   final GetPendingFeedbacks getPendingFeedbacks;
   final ApproveFeedback approveFeedback;
   final RejectFeedback rejectFeedback;
-
+  final GetFeedbacksByStatus getFeedbackByStatus;
   ManagerDashboardBloc({
     required this.getPendingFeedbacks,
     required this.approveFeedback,
     required this.rejectFeedback,
+    required this.getFeedbackByStatus,
   }) : super(const ManagerDashboardState()) {
     on<LoadManagerDashboardEvent>(_onLoadDashboard);
     on<ApproveFeedbackEvent>(_onApproveFeedback);
@@ -22,30 +24,32 @@ class ManagerDashboardBloc
   }
 
   Future<void> _onLoadDashboard(
-    LoadManagerDashboardEvent event,
-    Emitter<ManagerDashboardState> emit,
-  ) async {
-    emit(state.copyWith(isLoading: true, clearError: true, clearSuccess: true));
+  LoadManagerDashboardEvent event,
+  Emitter<ManagerDashboardState> emit,
+) async {
+  emit(state.copyWith(isLoading: true, clearError: true, clearSuccess: true));
 
-    try {
-      final feedbacks = await getPendingFeedbacks();
+  try {
+    final pending = await getPendingFeedbacks.repository.getFeedbacksByStatus('pending');
+    final approved = await getPendingFeedbacks.repository.getFeedbacksByStatus('approved');
 
-      emit(
-        state.copyWith(
-          isLoading: false,
-          pendingFeedbacks: feedbacks,
-          clearError: true,
-        ),
-      );
-    } catch (e) {
-      emit(
-        state.copyWith(
-          isLoading: false,
-          errorMessage: 'Failed to load pending approvals',
-        ),
-      );
-    }
+    emit(
+      state.copyWith(
+        isLoading: false,
+        pendingFeedbacks: pending,
+        approvedFeedbacks: approved,
+        clearError: true,
+      ),
+    );
+  } catch (e) {
+    emit(
+      state.copyWith(
+        isLoading: false,
+        errorMessage: 'Failed to load dashboard',
+      ),
+    );
   }
+}
 
   Future<void> _onApproveFeedback(
     ApproveFeedbackEvent event,
