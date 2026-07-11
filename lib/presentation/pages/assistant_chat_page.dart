@@ -50,13 +50,33 @@ class _AssistantChatPageState extends State<AssistantChatPage> {
   void initState() {
     super.initState();
     _loadUserInfo();
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+
+      final bloc = context.read<AssistantChatBloc>();
+
+      if (bloc.state.machines.isEmpty && !bloc.state.isLoading) {
+        bloc.add(LoadMachinesEvent());
+      }
+
+      if (bloc.state.sessions.isEmpty && !bloc.state.isSessionLoading) {
+        bloc.add(LoadSessionsEvent());
+      }
+    });
   }
 
   void _startNewChat() {
     issueController.clear();
     FocusScope.of(context).unfocus();
 
-    context.read<AssistantChatBloc>().add(StartNewChatEvent());
+    final bloc = context.read<AssistantChatBloc>();
+
+    bloc.add(StartNewChatEvent());
+
+    if (bloc.state.machines.isEmpty && !bloc.state.isLoading) {
+      bloc.add(LoadMachinesEvent());
+    }
   }
 
   Future<void> _loadUserInfo() async {
@@ -129,9 +149,15 @@ class _AssistantChatPageState extends State<AssistantChatPage> {
 
             onNewChat: () {
               final bloc = context.read<AssistantChatBloc>();
+
               Navigator.of(context).pop();
+
               bloc.add(StartNewChatEvent());
-              bloc.add(LoadMachinesEvent());
+
+              if (bloc.state.machines.isEmpty && !bloc.state.isLoading) {
+                bloc.add(LoadMachinesEvent());
+              }
+
               issueController.clear();
               FocusScope.of(context).unfocus();
             },

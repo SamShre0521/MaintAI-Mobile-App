@@ -9,6 +9,7 @@ import 'assistant_chat_event.dart';
 import 'assistant_chat_state.dart';
 import 'package:maintai/domain/usecase/getSessions.dart';
 import 'package:maintai/domain/usecase/getSessionMessages.dart';
+import 'package:flutter/foundation.dart';
 
 class AssistantChatBloc extends Bloc<AssistantChatEvent, AssistantChatState> {
   final GetMachines getMachines;
@@ -99,38 +100,53 @@ class AssistantChatBloc extends Bloc<AssistantChatEvent, AssistantChatState> {
   }
 
   Future<void> _onLoadMachines(
-    LoadMachinesEvent event,
-    Emitter<AssistantChatState> emit,
-  ) async {
-    emit(state.copyWith(isLoading: true));
+  LoadMachinesEvent event,
+  Emitter<AssistantChatState> emit,
+) async {
+  if (state.isLoading) return;
 
-    try {
-      final machines = await getMachines();
-
-      print("=========== MACHINES ===========");
-      print(machines.length);
-      print(machines);
-
+  if (state.machines.isNotEmpty) {
+    if (state.selectedMachine == null) {
       emit(
         state.copyWith(
-          isLoading: false,
-          machines: machines,
-          selectedMachine: machines.isNotEmpty ? machines.first : null,
-        ),
-      );
-    } catch (e, s) {
-      print("=========== MACHINE ERROR ===========");
-      print(e);
-      print(s);
-
-      emit(
-        state.copyWith(
-          isLoading: false,
-          errorMessage: "Failed to load machines",
+          selectedMachine: state.machines.first,
+          clearError: true,
         ),
       );
     }
+    return;
   }
+
+  emit(
+    state.copyWith(
+      isLoading: true,
+      clearError: true,
+    ),
+  );
+
+  try {
+    final machines = await getMachines();
+
+    emit(
+      state.copyWith(
+        isLoading: false,
+        machines: machines,
+        selectedMachine: machines.isNotEmpty ? machines.first : null,
+        clearError: true,
+      ),
+    );
+  } catch (e, stackTrace) {
+    debugPrint('Failed to load machines: $e');
+    debugPrintStack(stackTrace: stackTrace);
+
+    emit(
+      state.copyWith(
+        isLoading: false,
+        errorMessage: 'Failed to load machines',
+      ),
+    );
+  }
+}
 
   void _onToggleExpanded(
     ToggleExpandedComposerEvent event,
@@ -303,30 +319,37 @@ class AssistantChatBloc extends Bloc<AssistantChatEvent, AssistantChatState> {
   }
 
   Future<void> _onLoadSessions(
-    LoadSessionsEvent event,
-    Emitter<AssistantChatState> emit,
-  ) async {
-    emit(state.copyWith(isSessionLoading: true, clearError: true));
+  LoadSessionsEvent event,
+  Emitter<AssistantChatState> emit,
+) async {
+  if (state.isSessionLoading) return;
 
-    try {
-      final sessions = await getSessions();
+  emit(
+    state.copyWith(
+      isSessionLoading: true,
+      clearError: true,
+    ),
+  );
 
-      emit(
-        state.copyWith(
-          isSessionLoading: false,
-          sessions: await getSessions(),
-          clearError: true,
-        ),
-      );
-    } catch (_) {
-      emit(
-        state.copyWith(
-          isSessionLoading: false,
-          errorMessage: 'Failed to load issue history',
-        ),
-      );
-    }
+  try {
+    final sessions = await getSessions();
+
+    emit(
+      state.copyWith(
+        isSessionLoading: false,
+        sessions: sessions,
+        clearError: true,
+      ),
+    );
+  } catch (e) {
+    emit(
+      state.copyWith(
+        isSessionLoading: false,
+        errorMessage: 'Failed to load issue history',
+      ),
+    );
   }
+}
 
   Future<void> _onLoadSessionMessages(
     LoadSessionMessagesEvent event,

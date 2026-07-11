@@ -19,11 +19,11 @@ class ExpandedIssueCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     debugPrint(
-    'ExpandedIssueCard: '
-    'loading=${state.isLoading}, '
-    'machines=${state.machines.length}, '
-    'selected=${state.selectedMachine?.name}',
-  );
+      'ExpandedIssueCard: '
+      'loading=${state.isLoading}, '
+      'machines=${state.machines.length}, '
+      'selected=${state.selectedMachine?.name}',
+    );
     return Column(
       key: key,
       mainAxisSize: MainAxisSize.min,
@@ -105,6 +105,14 @@ class ExpandedIssueCard extends StatelessWidget {
                   ? state.selectedMachine?.id
                   : null,
               isExpanded: true,
+              // hint: Text(
+              //   state.isLoading
+              //       ? 'Loading machines...'
+              //       : state.machines.isEmpty
+              //       ? 'No machines available'
+              //       : 'Select machine',
+              //   style: const TextStyle(fontSize: 16, color: Color(0xFF9A9A9A)),
+              // ),
               hint: Text(
                 state.isLoading
                     ? 'Loading machines...'
@@ -126,14 +134,14 @@ class ExpandedIssueCard extends StatelessWidget {
                   ),
                 );
               }).toList(),
-              onChanged: state.machines.isEmpty
+              onChanged: state.isLoading || state.machines.isEmpty
                   ? null
                   : (value) {
-                      if (value != null) {
-                        context.read<AssistantChatBloc>().add(
-                          SelectMachineEvent(value),
-                        );
-                      }
+                      if (value == null) return;
+
+                      context.read<AssistantChatBloc>().add(
+                        SelectMachineEvent(value),
+                      );
                     },
             ),
           ),
