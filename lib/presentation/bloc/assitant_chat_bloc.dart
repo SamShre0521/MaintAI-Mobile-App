@@ -51,61 +51,6 @@ class AssistantChatBloc extends Bloc<AssistantChatEvent, AssistantChatState> {
       ),
     );
   }
-  //   Future<void> _onSubmitFeedback(
-  //   SubmitFeedbackEvent event,
-  //   Emitter<AssistantChatState> emit,
-  // ) async {
-  //   try {
-  //     if (state.sessionId == null) return;
-  //     if (state.messages.length < 2) return;
-
-  //     final firstUserMessage = state.messages.firstWhere(
-  //       (m) => m.isUser,
-  //     );
-
-  //     final lastAiMessage = state.messages.lastWhere(
-  //       (m) => !m.isUser,
-  //     );
-
-  //     await submitFeedback(
-  //       FeedbackRequest(
-  //         sessionId: state.sessionId!,
-  //         question: firstUserMessage.text,
-  //         answer: lastAiMessage.text,
-  //         engineerFeedback:
-  //             event.resolved ? "correct" : "incorrect",
-  //       ),
-  //     );
-
-  //     emit(
-  //       state.copyWith(
-  //         isIssueResolved: event.resolved,
-  //         showResolutionPrompt: false,
-  //         isExpanded: false,
-  //         clearError: true,
-  //       ),
-  //     );
-  //   } catch (_) {
-  //     emit(
-  //       state.copyWith(
-  //         errorMessage: 'Failed to submit feedback',
-  //       ),
-  //     );
-  //   }
-  // }
-
-  // void _onContinueIssue(
-  //   ContinueIssueEvent event,
-  //   Emitter<AssistantChatState> emit,
-  // ) {
-  //   emit(
-  //     state.copyWith(
-  //       isIssueResolved: false,
-  //       showResolutionPrompt: false,
-  //       clearError: true,
-  //     ),
-  //   );
-  // }
   void _onContinueIssue(
     ContinueIssueEvent event,
     Emitter<AssistantChatState> emit,
@@ -153,66 +98,39 @@ class AssistantChatBloc extends Bloc<AssistantChatEvent, AssistantChatState> {
     }
   }
 
-  // Future<void> _onLoadMachines(
-  //   LoadMachinesEvent event,
-  //   Emitter<AssistantChatState> emit,
-  // ) async {
-  //   emit(state.copyWith(isLoading: true, clearError: true));
-
-  //   try {
-  //     final machines = await getMachines();
-
-  //     emit(
-  //       state.copyWith(
-  //         isLoading: false,
-  //         machines: machines,
-  //         selectedMachine: machines.isNotEmpty ? machines.first : null,
-  //         clearError: true,
-  //       ),
-  //     );
-  //   } catch (_) {
-  //     emit(
-  //       state.copyWith(
-  //         isLoading: false,
-  //         errorMessage: 'Failed to load machines',
-  //       ),
-  //     );
-  //   }
-  // }
-
   Future<void> _onLoadMachines(
-  LoadMachinesEvent event,
-  Emitter<AssistantChatState> emit,
-) async {
-  emit(state.copyWith(isLoading: true));
+    LoadMachinesEvent event,
+    Emitter<AssistantChatState> emit,
+  ) async {
+    emit(state.copyWith(isLoading: true));
 
-  try {
-    final machines = await getMachines();
+    try {
+      final machines = await getMachines();
 
-    print("=========== MACHINES ===========");
-    print(machines.length);
-    print(machines);
+      print("=========== MACHINES ===========");
+      print(machines.length);
+      print(machines);
 
-    emit(
-      state.copyWith(
-        isLoading: false,
-        machines: machines,
-        selectedMachine: machines.isNotEmpty ? machines.first : null,
-      ),
-    );
-  } catch (e, s) {
-    print("=========== MACHINE ERROR ===========");
-    print(e);
-    print(s);
+      emit(
+        state.copyWith(
+          isLoading: false,
+          machines: machines,
+          selectedMachine: machines.isNotEmpty ? machines.first : null,
+        ),
+      );
+    } catch (e, s) {
+      print("=========== MACHINE ERROR ===========");
+      print(e);
+      print(s);
 
-    emit(
-      state.copyWith(
-        isLoading: false,
-        errorMessage: "Failed to load machines",
-      ),
-    );
+      emit(
+        state.copyWith(
+          isLoading: false,
+          errorMessage: "Failed to load machines",
+        ),
+      );
+    }
   }
-}
 
   void _onToggleExpanded(
     ToggleExpandedComposerEvent event,
@@ -277,9 +195,15 @@ class AssistantChatBloc extends Bloc<AssistantChatEvent, AssistantChatState> {
     );
 
     try {
+      // final response = await sendChatMessage(
+      //   message: text,
+      //   sessionId: state.sessionId,
+      // );
+
       final response = await sendChatMessage(
         message: text,
         sessionId: state.sessionId,
+        machineId: state.sessionId == null ? state.selectedMachine?.id : null,
       );
 
       final aiMessage = ChatMessage(
@@ -288,6 +212,8 @@ class AssistantChatBloc extends Bloc<AssistantChatEvent, AssistantChatState> {
         text: response.reply,
         time: 'Now',
         animateTyping: true,
+        sourceType: response.sourceType,
+        sources: response.sources,
       );
       final updatedSessions = await getSessions();
 

@@ -6,11 +6,11 @@ import 'package:maintai/domain/entities/chat_session.dart';
 abstract class AssistantRepository {
   Future<List<Machines>> getMachines();
 
-  Future<ChatResponse> sendMessage({
-    required String message,
-    String? sessionId,
-  });
-
+Future<ChatResponse> sendMessage({
+  required String message,
+  String? sessionId,
+  String? machineId,
+});
   Future<List<ChatSession>> getSessions();
 
   Future<List<ChatMessage>> getSessionMessages(String sessionId);

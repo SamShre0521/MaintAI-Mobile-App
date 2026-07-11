@@ -9,10 +9,12 @@ class SendChatMessage {
   Future<ChatResponse> call({
     required String message,
     String? sessionId,
+    String? machineId,
   }) {
     return repository.sendMessage(
       message: message,
       sessionId: sessionId,
+      machineId: machineId,
     );
   }
 }

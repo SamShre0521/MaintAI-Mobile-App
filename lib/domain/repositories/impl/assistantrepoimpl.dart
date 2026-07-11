@@ -1,4 +1,5 @@
 import 'package:maintai/ApiClient.dart';
+import 'package:maintai/domain/entities/answer-source.dart';
 import 'package:maintai/domain/entities/chat_response.dart';
 import 'package:maintai/domain/entities/machines.dart';
 import 'package:maintai/domain/repositories/assistantrepo.dart';
@@ -11,64 +12,78 @@ class AssistantRepositoryImpl implements AssistantRepository {
   AssistantRepositoryImpl(this.apiClient);
 
   @override
-Future<List<Machines>> getMachines() async {
-  final response = await apiClient.dio.get('/machines');
+  Future<List<Machines>> getMachines() async {
+    final response = await apiClient.dio.get('/machines');
 
-  final List<dynamic> machines = response.data['machines'] ?? [];
+    final List<dynamic> machines = response.data['machines'] ?? [];
 
-  return machines
-      .map((json) => Machines.fromJson(json))
-      .where((machine) => machine.id.isNotEmpty && machine.name.isNotEmpty)
-      .toList();
-}
+    return machines
+        .map((json) => Machines.fromJson(json))
+        .where((machine) => machine.id.isNotEmpty && machine.name.isNotEmpty)
+        .toList();
+  }
 
   @override
   Future<ChatResponse> sendMessage({
     required String message,
     String? sessionId,
+    String? machineId,
   }) async {
     final response = await apiClient.dio.post(
       '/chat',
       data: {
         'message': message,
         if (sessionId != null) 'sessionId': sessionId,
+        if (machineId != null) 'machineId': machineId,
       },
     );
 
-    final data = response.data;
+    final Map<String, dynamic> data = Map<String, dynamic>.from(response.data);
+
+    final dynamic rawSources = data['sources'];
+
+    final List<AnswerSource> parsedSources = rawSources is List
+        ? rawSources
+              .whereType<Map>()
+              .map(
+                (item) =>
+                    AnswerSource.fromJson(Map<String, dynamic>.from(item)),
+              )
+              .toList()
+        : <AnswerSource>[];
 
     return ChatResponse(
-      sessionId: data['sessionId'],
-      title: data['title'],
-      reply: data['reply'] ?? '',
+      sessionId: data['sessionId']?.toString(),
+      title: data['title']?.toString(),
+      reply: data['reply']?.toString() ?? '',
+      sourceType: data['sourceType']?.toString() ?? 'general_ai',
+      sources: parsedSources,
     );
   }
 
   @override
-Future<List<ChatSession>> getSessions() async {
-  final response = await apiClient.dio.get('/sessions');
+  Future<List<ChatSession>> getSessions() async {
+    final response = await apiClient.dio.get('/sessions');
 
-  final List sessions = response.data['sessions'] ?? [];
+    final List sessions = response.data['sessions'] ?? [];
 
-  return sessions
-      .map((json) => ChatSession.fromJson(json))
-      .toList();
-}
+    return sessions.map((json) => ChatSession.fromJson(json)).toList();
+  }
 
-@override
-Future<List<ChatMessage>> getSessionMessages(String sessionId) async {
-  final response = await apiClient.dio.get('/sessions/$sessionId/messages');
+  @override
+  Future<List<ChatMessage>> getSessionMessages(String sessionId) async {
+    final response = await apiClient.dio.get('/sessions/$sessionId/messages');
 
-  final List messages = response.data['messages'] ?? [];
+    final List messages = response.data['messages'] ?? [];
 
-  return messages.map((json) {
-    return ChatMessage(
-      id: json['_id'] ?? DateTime.now().microsecondsSinceEpoch.toString(),
-      isUser: json['role'] == 'user',
-      text: json['content'] ?? '',
-      time: 'History',
-      animateTyping: false,
-    );
-  }).toList();
-}
+    return messages.map((json) {
+      return ChatMessage(
+        id: json['_id'] ?? DateTime.now().microsecondsSinceEpoch.toString(),
+        isUser: json['role'] == 'user',
+        text: json['content'] ?? '',
+        time: 'History',
+        animateTyping: false,
+      );
+    }).toList();
+  }
 }

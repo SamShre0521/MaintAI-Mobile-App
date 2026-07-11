@@ -18,6 +18,12 @@ class ExpandedIssueCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    debugPrint(
+    'ExpandedIssueCard: '
+    'loading=${state.isLoading}, '
+    'machines=${state.machines.length}, '
+    'selected=${state.selectedMachine?.name}',
+  );
     return Column(
       key: key,
       mainAxisSize: MainAxisSize.min,
@@ -99,15 +105,14 @@ class ExpandedIssueCard extends StatelessWidget {
                   ? state.selectedMachine?.id
                   : null,
               isExpanded: true,
-              hint: state.isLoading
-                  ? const Text(
-                      'Loading machines...',
-                      style: TextStyle(fontSize: 16, color: Color(0xFF9A9A9A)),
-                    )
-                  : const Text(
-                      'Select machine',
-                      style: TextStyle(fontSize: 16, color: Color(0xFF9A9A9A)),
-                    ),
+              hint: Text(
+                state.isLoading
+                    ? 'Loading machines...'
+                    : state.machines.isEmpty
+                    ? 'No machines available'
+                    : 'Select machine',
+                style: const TextStyle(fontSize: 16, color: Color(0xFF9A9A9A)),
+              ),
               icon: const Icon(Icons.keyboard_arrow_down_rounded),
               items: state.machines.map((machine) {
                 return DropdownMenuItem<String>(
