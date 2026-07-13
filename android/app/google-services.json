@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "260415705501",
+    "project_id": "maintai-f7bee",
+    "storage_bucket": "maintai-f7bee.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:260415705501:android:c97976445c3f7943695f74",
+        "android_client_info": {
+          "package_name": "com.maintai.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDEMK54tMs5mcxMU9h4HjCkcz_EvT8M0vA"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
