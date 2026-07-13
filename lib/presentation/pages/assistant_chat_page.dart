@@ -15,6 +15,7 @@ import 'package:maintai/presentation/bloc/manager_dashboard_bloc.dart';
 import 'package:maintai/presentation/bloc/manager_dashboard_event.dart';
 import 'package:maintai/presentation/pages/app_sidebar.dart';
 import 'package:maintai/presentation/pages/manager_dashboard.dart';
+import 'package:maintai/presentation/pages/upload_machines_document.dart';
 import 'package:maintai/presentation/widgets/animated_message_wrapper.dart';
 import 'package:maintai/presentation/widgets/typing_bubble_widget.dart';
 import 'package:maintai/presentation/widgets/welcome_widget.dart';
@@ -208,6 +209,11 @@ class _AssistantChatPageState extends State<AssistantChatPage> {
 
             onUploads: () {
               Navigator.of(context).pop();
+
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const UploadMachinePage()),
+              );
             },
 
             onSettings: () {

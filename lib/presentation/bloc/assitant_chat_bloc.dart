@@ -99,7 +99,56 @@ class AssistantChatBloc extends Bloc<AssistantChatEvent, AssistantChatState> {
     }
   }
 
-  Future<void> _onLoadMachines(
+//   Future<void> _onLoadMachines(
+//   LoadMachinesEvent event,
+//   Emitter<AssistantChatState> emit,
+// ) async {
+//   if (state.isLoading) return;
+
+//   if (state.machines.isNotEmpty) {
+//     if (state.selectedMachine == null) {
+//       emit(
+//         state.copyWith(
+//           selectedMachine: state.machines.first,
+//           clearError: true,
+//         ),
+//       );
+//     }
+//     return;
+//   }
+
+//   emit(
+//     state.copyWith(
+//       isLoading: true,
+//       clearError: true,
+//     ),
+//   );
+
+//   try {
+//     final machines = await getMachines();
+
+//     emit(
+//       state.copyWith(
+//         isLoading: false,
+//         machines: machines,
+//         selectedMachine: machines.isNotEmpty ? machines.first : null,
+//         clearError: true,
+//       ),
+//     );
+//   } catch (e, stackTrace) {
+//     debugPrint('Failed to load machines: $e');
+//     debugPrintStack(stackTrace: stackTrace);
+
+//     emit(
+//       state.copyWith(
+//         isLoading: false,
+//         errorMessage: 'Failed to load machines',
+//       ),
+//     );
+//   }
+// }
+
+Future<void> _onLoadMachines(
   LoadMachinesEvent event,
   Emitter<AssistantChatState> emit,
 ) async {
@@ -127,6 +176,10 @@ class AssistantChatBloc extends Bloc<AssistantChatEvent, AssistantChatState> {
   try {
     final machines = await getMachines();
 
+    debugPrint(
+      'Loaded machines: ${machines.map((m) => m.name).toList()}',
+    );
+
     emit(
       state.copyWith(
         isLoading: false,
@@ -136,7 +189,7 @@ class AssistantChatBloc extends Bloc<AssistantChatEvent, AssistantChatState> {
       ),
     );
   } catch (e, stackTrace) {
-    debugPrint('Failed to load machines: $e');
+    debugPrint('Machine loading error: $e');
     debugPrintStack(stackTrace: stackTrace);
 
     emit(

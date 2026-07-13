@@ -137,9 +137,9 @@ class _AuthPageState extends State<AuthPage> {
                                 assistantRepository,
                               ),
                               submitFeedback: submitFeedback,
-                            )
-                            ..add(LoadMachinesEvent())
-                            ..add(LoadSessionsEvent()),
+                            ),
+                            // ..add(LoadMachinesEvent())
+                            // ..add(LoadSessionsEvent()),
                       child: const AssistantChatPage(),
                     ),
                   ),
