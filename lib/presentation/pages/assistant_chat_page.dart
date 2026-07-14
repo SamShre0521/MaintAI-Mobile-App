@@ -23,6 +23,7 @@ import 'package:maintai/presentation/widgets/user_message_bubble.dart';
 import 'package:maintai/presentation/widgets/ai_message_bubble.dart';
 import 'package:maintai/presentation/widgets/compact_bottom_bar.dart';
 import 'package:maintai/presentation/widgets/expanded_issue_card.dart';
+import 'package:maintai/services/notification_bootstrap.dart';
 import 'package:maintai/storage/tokenStorage.dart';
 import 'package:maintai/ApiClient.dart';
 import 'package:maintai/domain/repositories/impl/authrepoimpl.dart';
@@ -222,6 +223,7 @@ class _AssistantChatPageState extends State<AssistantChatPage> {
 
             onLogout: () async {
               Navigator.of(context).pop();
+              await NotificationBootstrap.unregisterOnLogout();
 
               await TokenStorage().clearToken();
 

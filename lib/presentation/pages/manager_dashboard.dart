@@ -15,6 +15,7 @@ import 'package:maintai/presentation/pages/app_sidebar.dart';
 import 'package:maintai/presentation/pages/auth.dart';
 import 'package:maintai/presentation/pages/manager_review_issue.dart';
 import 'package:maintai/presentation/pages/upload_machines_document.dart';
+import 'package:maintai/services/notification_bootstrap.dart';
 import 'package:maintai/storage/tokenStorage.dart';
 import 'package:maintai/domain/usecase/getMachines.dart';
 import 'package:maintai/domain/usecase/sendChatMessage.dart';
@@ -119,6 +120,7 @@ class ManagerDashboardPage extends StatelessWidget {
             },
             onLogout: () async {
               Navigator.pop(context);
+              await NotificationBootstrap.unregisterOnLogout();
 
               await TokenStorage().clearToken();
 
@@ -357,7 +359,10 @@ class ManagerDashboardPage extends StatelessWidget {
                     icon: Icons.logout_rounded,
                     label: 'Logout',
                     onTap: () async {
+                                            await NotificationBootstrap.unregisterOnLogout();
+
                       await TokenStorage().clearToken();
+
 
                       if (!context.mounted) return;
 

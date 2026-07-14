@@ -25,6 +25,7 @@ import '../bloc/auth_bloc.dart';
 import 'package:maintai/domain/usecase/getSessions.dart';
 import 'package:maintai/domain/usecase/getSessionMessages.dart';
 import 'package:maintai/domain/usecase/submitFeedback.dart';
+import 'package:maintai/services/notification_bootstrap.dart';
 
 class AuthPage extends StatefulWidget {
   const AuthPage({super.key});
@@ -91,6 +92,7 @@ class _AuthPageState extends State<AuthPage> {
             if (state is AuthSuccess) {
               final tokenStorage = TokenStorage();
               final apiClient = ApiClient(tokenStorage);
+              await NotificationBootstrap.initializeAfterLogin();
 
               if (state.user.role.toLowerCase() == 'manager') {
                 final managerRepository = ManagerRepositoryImpl(apiClient);
