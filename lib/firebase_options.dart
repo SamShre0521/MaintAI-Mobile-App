@@ -56,7 +56,6 @@ class DefaultFirebaseOptions {
     projectId: 'maintai-f7bee',
     storageBucket: 'maintai-f7bee.firebasestorage.app',
   );
-
   static const FirebaseOptions ios = FirebaseOptions(
     apiKey: 'AIzaSyD2z6-eTFTCs523BtmRoSnIRvv8IIAlodo',
     appId: '1:260415705501:ios:dd5b8c64d9e6ece9695f74',
