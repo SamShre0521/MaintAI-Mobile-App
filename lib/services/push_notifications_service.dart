@@ -37,6 +37,9 @@ class PushNotificationService {
     _listenForNotificationTaps();
   }
 
+  Future<void> registerCurrentDevice() async {
+  await _registerDeviceToken();
+}
   Future<void> _initializeLocalNotifications() async {
     const androidSettings = AndroidInitializationSettings(
       '@mipmap/ic_launcher',
