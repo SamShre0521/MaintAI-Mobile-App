@@ -3,6 +3,7 @@ import 'package:maintai/ApiClient.dart';
 import 'package:maintai/domain/entities/user_notification.dart';
 import 'package:maintai/domain/repositories/notificationrepo.dart';
 import 'package:maintai/storage/tokenStorage.dart';
+import 'package:maintai/presentation/pages/edit_rejected_feedback_page.dart';
 
 class NotificationDetailsPage extends StatefulWidget {
   final String? notificationId;
@@ -21,8 +22,7 @@ class NotificationDetailsPage extends StatefulWidget {
       _NotificationDetailsPageState();
 }
 
-class _NotificationDetailsPageState
-    extends State<NotificationDetailsPage> {
+class _NotificationDetailsPageState extends State<NotificationDetailsPage> {
   late final NotificationRepository repository;
 
   UserNotification? notification;
@@ -33,9 +33,7 @@ class _NotificationDetailsPageState
   void initState() {
     super.initState();
 
-    repository = NotificationRepository(
-      ApiClient(TokenStorage()),
-    );
+    repository = NotificationRepository(ApiClient(TokenStorage()));
 
     _load();
   }
@@ -53,6 +51,11 @@ class _NotificationDetailsPageState
 
     try {
       final result = await repository.getNotification(id);
+      debugPrint('Loaded notification type: ${result.type}');
+      debugPrint('Loaded feedbackId: ${result.feedbackId}');
+      debugPrint('Loaded question: ${result.question}');
+      debugPrint('Loaded answer length: ${result.answer?.length}');
+      debugPrint('Loaded manager status: ${result.managerStatus}');
       await repository.markAsRead(id);
 
       if (!mounted) return;
@@ -91,70 +94,106 @@ class _NotificationDetailsPageState
       ),
       body: isLoading
           ? const Center(
-              child: CircularProgressIndicator(
-                color: Color(0xFFF1C84B),
-              ),
+              child: CircularProgressIndicator(color: Color(0xFFF1C84B)),
             )
           : errorMessage != null
-              ? Center(child: Text(errorMessage!))
-              : ListView(
-                  padding: const EdgeInsets.all(16),
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(18),
-                      decoration: BoxDecoration(
+          ? Center(child: Text(errorMessage!))
+          : ListView(
+              padding: const EdgeInsets.all(16),
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(18),
+                  decoration: BoxDecoration(
+                    color: isRejected
+                        ? const Color(0xFFFFF1F2)
+                        : const Color(0xFFF0FDF4),
+                    borderRadius: BorderRadius.circular(22),
+                    border: Border.all(
+                      color: isRejected
+                          ? const Color(0xFFFCA5A5)
+                          : const Color(0xFFBBF7D0),
+                    ),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(
+                        isRejected
+                            ? Icons.error_outline_rounded
+                            : Icons.verified_rounded,
                         color: isRejected
-                            ? const Color(0xFFFFF1F2)
-                            : const Color(0xFFF0FDF4),
-                        borderRadius: BorderRadius.circular(22),
-                        border: Border.all(
-                          color: isRejected
-                              ? const Color(0xFFFCA5A5)
-                              : const Color(0xFFBBF7D0),
+                            ? const Color(0xFFDC2626)
+                            : const Color(0xFF16A34A),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Text(
+                          item!.message,
+                          style: const TextStyle(
+                            fontSize: 15,
+                            fontWeight: FontWeight.w700,
+                          ),
                         ),
                       ),
-                      child: Row(
-                        children: [
-                          Icon(
-                            isRejected
-                                ? Icons.error_outline_rounded
-                                : Icons.verified_rounded,
-                            color: isRejected
-                                ? const Color(0xFFDC2626)
-                                : const Color(0xFF16A34A),
-                          ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: Text(
-                              item!.message,
-                              style: const TextStyle(
-                                fontSize: 15,
-                                fontWeight: FontWeight.w700,
-                              ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 16),
+                _DetailCard(title: 'Issue', text: item.question ?? '-'),
+                const SizedBox(height: 12),
+                _DetailCard(
+                  title: 'Submitted Solution',
+                  text: item.answer ?? '-',
+                ),
+                if ((item.managerComment ?? '').isNotEmpty) ...[
+                  const SizedBox(height: 12),
+                  _DetailCard(
+                    title: 'Manager Comment',
+                    text: item.managerComment!,
+                  ),
+                ],
+                if (isRejected &&
+                    item?.feedbackId != null &&
+                    item?.question != null &&
+                    item?.answer != null) ...[
+                  const SizedBox(height: 18),
+                  SizedBox(
+                    height: 54,
+                    child: ElevatedButton.icon(
+                      icon: const Icon(Icons.edit_rounded),
+                      label: const Text('Edit & Resubmit'),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFFF1C84B),
+                        foregroundColor: const Color(0xFF111827),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(18),
+                        ),
+                        textStyle: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w900,
+                        ),
+                      ),
+                      onPressed: () async {
+                        final resubmitted = await Navigator.push<bool>(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => EditRejectedFeedbackPage(
+                              feedbackId: item!.feedbackId!,
+                              question: item.question!,
+                              answer: item.answer!,
+                              managerComment: item.managerComment,
                             ),
                           ),
-                        ],
-                      ),
+                        );
+
+                        if (resubmitted == true && context.mounted) {
+                          Navigator.pop(context);
+                        }
+                      },
                     ),
-                    const SizedBox(height: 16),
-                    _DetailCard(
-                      title: 'Issue',
-                      text: item.question ?? '-',
-                    ),
-                    const SizedBox(height: 12),
-                    _DetailCard(
-                      title: 'Submitted Solution',
-                      text: item.answer ?? '-',
-                    ),
-                    if ((item.managerComment ?? '').isNotEmpty) ...[
-                      const SizedBox(height: 12),
-                      _DetailCard(
-                        title: 'Manager Comment',
-                        text: item.managerComment!,
-                      ),
-                    ],
-                  ],
-                ),
+                  ),
+                ],
+              ],
+            ),
     );
   }
 }
@@ -163,10 +202,7 @@ class _DetailCard extends StatelessWidget {
   final String title;
   final String text;
 
-  const _DetailCard({
-    required this.title,
-    required this.text,
-  });
+  const _DetailCard({required this.title, required this.text});
 
   @override
   Widget build(BuildContext context) {
@@ -175,9 +211,7 @@ class _DetailCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(22),
-        border: Border.all(
-          color: const Color(0xFFE4DCC8),
-        ),
+        border: Border.all(color: const Color(0xFFE4DCC8)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,

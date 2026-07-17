@@ -8,6 +8,7 @@ import 'package:maintai/presentation/pages/notification_details_page.dart';
 import 'package:maintai/services/push_notifications_service.dart';
 import 'package:maintai/storage/tokenStorage.dart';
 import 'package:flutter/foundation.dart';
+
 class NotificationBootstrap {
   NotificationBootstrap._();
 
@@ -16,13 +17,13 @@ class NotificationBootstrap {
 
   static Future<void> initializeAfterLogin() async {
     if (_service != null) {
-  debugPrint(
-    'Notification service already exists. Registering device again.',
-  );
+      debugPrint(
+        'Notification service already exists. Registering device again.',
+      );
 
-  await _service!.registerCurrentDevice();
-  return;
-}
+      await _service!.registerCurrentDevice();
+      return;
+    }
 
     final tokenStorage = TokenStorage();
     final apiClient = ApiClient(tokenStorage);
@@ -61,6 +62,12 @@ class NotificationBootstrap {
         payload.type != 'feedback_rejected') {
       return;
     }
+    debugPrint('========== OPENING NOTIFICATION ==========');
+    debugPrint('Type: ${payload.type}');
+    debugPrint('Notification ID: ${payload.notificationId}');
+    debugPrint('Feedback ID: ${payload.feedbackId}');
+    debugPrint('Session ID: ${payload.sessionId}');
+    debugPrint('Opening NotificationDetailsPage');
 
     _pendingPayload = null;
 

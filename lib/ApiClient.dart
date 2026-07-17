@@ -8,8 +8,8 @@ class ApiClient {
   ApiClient(this.tokenStorage)
       : dio = Dio(
           BaseOptions(
-           // baseUrl: 'https://maintai-backend-uat.onrender.com/api',  
-            baseUrl:'http://10.0.2.2:3000/api', // change if needed
+            baseUrl: 'https://maintai-backend-uat.onrender.com/api',  
+           // baseUrl:'http://10.0.2.2:3000/api', // change if needed
             connectTimeout: const Duration(seconds: 60),
             receiveTimeout: const Duration(seconds: 60),
             headers: {

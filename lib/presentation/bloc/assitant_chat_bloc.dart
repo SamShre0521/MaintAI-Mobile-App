@@ -404,32 +404,79 @@ Future<void> _onLoadMachines(
   }
 }
 
-  Future<void> _onLoadSessionMessages(
-    LoadSessionMessagesEvent event,
-    Emitter<AssistantChatState> emit,
-  ) async {
-    emit(state.copyWith(isAiTyping: true, clearError: true));
+//   Future<void> _onLoadSessionMessages(
+//     LoadSessionMessagesEvent event,
+//     Emitter<AssistantChatState> emit,
+//   ) async {
+//     emit(state.copyWith(isAiTyping: true, clearError: true));
 
-    try {
-      final messages = await getSessionMessages(event.sessionId);
+//     try {
+//       final messages = await getSessionMessages(event.sessionId);
 
-      emit(
-        state.copyWith(
-          sessionId: event.sessionId,
-          messages: messages,
-          isExpanded: false,
-          isAiTyping: false,
-          clearError: true,
-          isHistoryMode: true,
-        ),
-      );
-    } catch (_) {
-      emit(
-        state.copyWith(
-          isAiTyping: false,
-          errorMessage: 'Failed to load chat messages',
-        ),
-      );
-    }
+//       emit(
+//         state.copyWith(
+//           sessionId: event.sessionId,
+//           messages: messages,
+//           isExpanded: false,
+//           isAiTyping: false,
+//           clearError: true,
+//           isHistoryMode: true,
+//         ),
+//       );
+//     } catch (_) {
+//       emit(
+//         state.copyWith(
+//           isAiTyping: false,
+//           errorMessage: 'Failed to load chat messages',
+//         ),
+//       );
+//     }
+//   }
+// }
+
+Future<void> _onLoadSessionMessages(
+  LoadSessionMessagesEvent event,
+  Emitter<AssistantChatState> emit,
+) async {
+  emit(
+    state.copyWith(
+      isAiTyping: true,
+      isIssueResolved: false,
+      showResolutionPrompt: false,
+      clearError: true,
+    ),
+  );
+
+  try {
+    final messages = await getSessionMessages(event.sessionId);
+
+    emit(
+      state.copyWith(
+        sessionId: event.sessionId,
+        messages: messages,
+        isExpanded: false,
+        isAiTyping: false,
+
+        // Important: never inherit resolved state from previous chat.
+        isIssueResolved: false,
+        showResolutionPrompt: false,
+
+        clearError: true,
+        isHistoryMode: true,
+      ),
+    );
+  } catch (e, stackTrace) {
+    debugPrint('Failed to load chat messages: $e');
+    debugPrintStack(stackTrace: stackTrace);
+
+    emit(
+      state.copyWith(
+        isAiTyping: false,
+        isIssueResolved: false,
+        showResolutionPrompt: false,
+        errorMessage: 'Failed to load chat messages',
+      ),
+    );
   }
+}
 }

@@ -28,10 +28,10 @@ class UserNotification {
   });
 
   factory UserNotification.fromJson(Map<String, dynamic> json) {
-    final feedback = json['feedback'];
+    final rawFeedback = json['feedback'];
 
-    final feedbackMap = feedback is Map
-        ? Map<String, dynamic>.from(feedback)
+    final feedback = rawFeedback is Map
+        ? Map<String, dynamic>.from(rawFeedback)
         : <String, dynamic>{};
 
     return UserNotification(
@@ -40,18 +40,25 @@ class UserNotification {
       title: json['title']?.toString() ?? '',
       message: json['message']?.toString() ?? '',
       isRead: json['isRead'] == true,
+
       feedbackId:
-          json['feedbackId']?.toString() ??
-          feedbackMap['_id']?.toString(),
+          feedback['_id']?.toString() ??
+          json['feedbackId']?.toString(),
+
       sessionId:
-          json['sessionId']?.toString() ??
-          feedbackMap['sessionId']?.toString(),
-      managerComment:
-          feedbackMap['managerComment']?.toString(),
-      question: feedbackMap['question']?.toString(),
-      answer: feedbackMap['answer']?.toString(),
+          feedback['sessionId']?.toString() ??
+          json['sessionId']?.toString(),
+
+      question: feedback['question']?.toString(),
+
+      answer: feedback['answer']?.toString(),
+
       managerStatus:
-          feedbackMap['managerStatus']?.toString(),
+          feedback['managerStatus']?.toString(),
+
+      managerComment:
+          feedback['managerComment']?.toString(),
+
       createdAt: json['createdAt']?.toString() ?? '',
     );
   }
