@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:maintai/ApiClient.dart';
 import 'package:maintai/domain/repositories/impl/authrepoimpl.dart';
 import 'package:maintai/domain/usecase/authorizations.dart';
+import 'package:maintai/navigation/app-navigation.dart';
 import 'package:maintai/presentation/bloc/auth_bloc.dart';
 import 'package:maintai/presentation/pages/auth.dart';
 import 'package:maintai/storage/tokenStorage.dart';
@@ -42,6 +43,7 @@ class MyApp extends StatelessWidget {
 
     return MaterialApp(
       debugShowCheckedModeBanner: false,
+       navigatorKey: AppNavigator.key,
       title: 'MaintAI',
       theme: ThemeData(primarySwatch: Colors.blue),
       home: BlocProvider(

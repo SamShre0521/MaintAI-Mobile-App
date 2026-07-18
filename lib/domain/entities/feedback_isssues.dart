@@ -1,3 +1,5 @@
+import 'package:maintai/domain/entities/feedback_conversation.dart';
+
 class FeedbackIssue {
   final String id;
   final String sessionId;
@@ -14,6 +16,7 @@ class FeedbackIssue {
   final String? approvedBy;
   final String createdAt;
   final String updatedAt;
+  final List<FeedbackConversationMessage> conversation;
 
   const FeedbackIssue({
     required this.id,
@@ -31,8 +34,9 @@ class FeedbackIssue {
     required this.approvedBy,
     required this.createdAt,
     required this.updatedAt,
+    required this.conversation,
   });
-
+  
   factory FeedbackIssue.fromJson(Map<String, dynamic> json) {
   final user = json['userId'] ?? {};
 
@@ -47,6 +51,7 @@ class FeedbackIssue {
   } else if (approved is Map<String, dynamic>) {
     approvedBy = approved['name'] ?? approved['_id'];
   }
+  
 
   return FeedbackIssue(
     id: json['_id'] ?? '',
@@ -64,6 +69,15 @@ class FeedbackIssue {
     approvedBy: approvedBy,
     createdAt: json['createdAt'] ?? '',
     updatedAt: json['updatedAt'] ?? '',
+    conversation: (json['conversation'] as List<dynamic>?)
+        ?.map((messageJson) => FeedbackConversationMessage(
+              role: messageJson['role'] ?? '',
+              content: messageJson['content'] ?? '',
+              createdAt: messageJson['createdAt'],
+            ))
+        .toList() ??
+        [],
   );
 }
 }
+

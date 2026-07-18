@@ -124,11 +124,6 @@ class AppSidebar extends StatelessWidget {
                       title: 'New Chat',
                       onTap: onNewChat,
                     ),
-                    // _tile(
-                    //   icon: Icons.precision_manufacturing_outlined,
-                    //   title: 'Machines',
-                    //   onTap: onMachines,
-                    // ),
                     Theme(
                       data: Theme.of(
                         context,

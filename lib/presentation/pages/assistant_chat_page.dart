@@ -65,6 +65,8 @@ class _AssistantChatPageState extends State<AssistantChatPage> {
       if (bloc.state.sessions.isEmpty && !bloc.state.isSessionLoading) {
         bloc.add(LoadSessionsEvent());
       }
+      NotificationBootstrap
+        .openPendingNotificationAfterNavigation();
     });
   }
 
@@ -339,39 +341,6 @@ class _AssistantChatPageState extends State<AssistantChatPage> {
                     }
                     final promptIndex =
                         state.messages.length + (state.isAiTyping ? 1 : 0);
-
-                    // if (state.showResolutionPrompt &&
-                    //     adjustedIndex == promptIndex) {
-                    //   return IssueResolutionPrompt(
-                    //     onResolved: () {
-                    //       context.read<AssistantChatBloc>().add(
-                    //         MarkIssueResolvedEvent(),
-                    //       );
-                    //     },
-                    //     onNotResolved: () {
-                    //       context.read<AssistantChatBloc>().add(
-                    //         ContinueIssueEvent(),
-                    //       );
-                    //     },
-                    //   );
-                    // }
-
-                    // if (state.showResolutionPrompt &&
-                    //     adjustedIndex == promptIndex) {
-                    //   return IssueResolutionPrompt(
-                    //     onResolved: () {
-                    //       context.read<AssistantChatBloc>().add(
-                    //         SubmitFeedbackEvent(true),
-                    //       );
-                    //     },
-                    //     onNotResolved: () {
-                    //       context.read<AssistantChatBloc>().add(
-                    //         SubmitFeedbackEvent(false),
-                    //       );
-                    //     },
-                    //   );
-                    // }
-
                     if (state.showResolutionPrompt &&
                         adjustedIndex == promptIndex) {
                       return IssueResolutionPrompt(
@@ -453,31 +422,6 @@ class _AssistantChatPageState extends State<AssistantChatPage> {
                         height: 0,
                       )
                     : _chatInputBar(key: const ValueKey('chat')),
-
-                // child: state.isIssueResolved
-                //     ? IssueResolvedFooter(onNewChat: _startNewChat)
-                //     : state.sessionId == null
-                //     ? (state.isExpanded
-                //           ? ExpandedIssueCard(
-                //               key: const ValueKey('expanded'),
-                //               state: state,
-                //               controller: issueController,
-                //               onSend: _sendMessage,
-                //             )
-                //           : CompactBottomBar(
-                //               key: const ValueKey('compact'),
-                //               onExpand: () {
-                //                 context.read<AssistantChatBloc>().add(
-                //                   ToggleExpandedComposerEvent(true),
-                //                 );
-                //               },
-                //             ))
-                //     : state.showResolutionPrompt
-                //     ? const SizedBox(
-                //         key: ValueKey('waiting-resolution'),
-                //         height: 0,
-                //       )
-                //     : _chatInputBar(key: const ValueKey('chat')),
               ),
             ),
           ),

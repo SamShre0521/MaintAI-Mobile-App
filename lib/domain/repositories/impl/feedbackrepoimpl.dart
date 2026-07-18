@@ -18,12 +18,8 @@ class feedbackrepoimpl implements Feedbackrepository {
     try {
          await apiClient.dio.post(
       '/feedback',
-      data: {
-        "sessionId": feedback.sessionId,
-        "question": feedback.question,
-        "answer": feedback.answer,
-        "engineerFeedback": feedback.engineerFeedback,
-      },
+      // 
+      data: feedback.toJson(),
     );
     } catch (e) {
       throw Exception('Failed to send feedback: $e');

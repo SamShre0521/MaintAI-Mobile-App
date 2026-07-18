@@ -1,7 +1,10 @@
+import 'package:dio/dio.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:maintai/domain/entities/chat_message.dart';
 import 'package:maintai/domain/entities/feedback.dart';
+import 'package:maintai/domain/entities/feedback_conversation.dart';
 import 'package:maintai/domain/entities/machines.dart';
+import 'package:maintai/domain/repositories/impl/assistantrepoimpl.dart';
 import 'package:maintai/domain/usecase/getMachines.dart';
 import 'package:maintai/domain/usecase/sendChatMessage.dart';
 import 'package:maintai/domain/usecase/submitFeedback.dart';
@@ -52,6 +55,7 @@ class AssistantChatBloc extends Bloc<AssistantChatEvent, AssistantChatState> {
       ),
     );
   }
+
   void _onContinueIssue(
     ContinueIssueEvent event,
     Emitter<AssistantChatState> emit,
@@ -65,141 +69,51 @@ class AssistantChatBloc extends Bloc<AssistantChatEvent, AssistantChatState> {
     );
   }
 
-  Future<void> _onSubmitFeedback(
-    SubmitFeedbackEvent event,
+  Future<void> _onLoadMachines(
+    LoadMachinesEvent event,
     Emitter<AssistantChatState> emit,
   ) async {
+    if (state.isLoading) return;
+
+    if (state.machines.isNotEmpty) {
+      if (state.selectedMachine == null) {
+        emit(
+          state.copyWith(
+            selectedMachine: state.machines.first,
+            clearError: true,
+          ),
+        );
+      }
+      return;
+    }
+
+    emit(state.copyWith(isLoading: true, clearError: true));
+
     try {
-      if (state.sessionId == null) return;
-      if (state.messages.length < 2) return;
+      final machines = await getMachines();
 
-      final firstUserMessage = state.messages.firstWhere((m) => m.isUser);
-
-      final lastAiMessage = state.messages.lastWhere((m) => !m.isUser);
-
-      await submitFeedback(
-        FeedbackRequest(
-          sessionId: state.sessionId!,
-          question: firstUserMessage.text,
-          answer: lastAiMessage.text,
-          engineerFeedback: event.resolved ? "correct" : "incorrect",
-        ),
-      );
+      debugPrint('Loaded machines: ${machines.map((m) => m.name).toList()}');
 
       emit(
         state.copyWith(
-          isIssueResolved: event.resolved,
-          showResolutionPrompt: false,
-          isExpanded: false,
+          isLoading: false,
+          machines: machines,
+          selectedMachine: machines.isNotEmpty ? machines.first : null,
           clearError: true,
         ),
       );
-    } catch (_) {
-      emit(state.copyWith(errorMessage: 'Failed to submit feedback'));
-    }
-  }
+    } catch (e, stackTrace) {
+      debugPrint('Machine loading error: $e');
+      debugPrintStack(stackTrace: stackTrace);
 
-//   Future<void> _onLoadMachines(
-//   LoadMachinesEvent event,
-//   Emitter<AssistantChatState> emit,
-// ) async {
-//   if (state.isLoading) return;
-
-//   if (state.machines.isNotEmpty) {
-//     if (state.selectedMachine == null) {
-//       emit(
-//         state.copyWith(
-//           selectedMachine: state.machines.first,
-//           clearError: true,
-//         ),
-//       );
-//     }
-//     return;
-//   }
-
-//   emit(
-//     state.copyWith(
-//       isLoading: true,
-//       clearError: true,
-//     ),
-//   );
-
-//   try {
-//     final machines = await getMachines();
-
-//     emit(
-//       state.copyWith(
-//         isLoading: false,
-//         machines: machines,
-//         selectedMachine: machines.isNotEmpty ? machines.first : null,
-//         clearError: true,
-//       ),
-//     );
-//   } catch (e, stackTrace) {
-//     debugPrint('Failed to load machines: $e');
-//     debugPrintStack(stackTrace: stackTrace);
-
-//     emit(
-//       state.copyWith(
-//         isLoading: false,
-//         errorMessage: 'Failed to load machines',
-//       ),
-//     );
-//   }
-// }
-
-Future<void> _onLoadMachines(
-  LoadMachinesEvent event,
-  Emitter<AssistantChatState> emit,
-) async {
-  if (state.isLoading) return;
-
-  if (state.machines.isNotEmpty) {
-    if (state.selectedMachine == null) {
       emit(
         state.copyWith(
-          selectedMachine: state.machines.first,
-          clearError: true,
+          isLoading: false,
+          errorMessage: 'Failed to load machines',
         ),
       );
     }
-    return;
   }
-
-  emit(
-    state.copyWith(
-      isLoading: true,
-      clearError: true,
-    ),
-  );
-
-  try {
-    final machines = await getMachines();
-
-    debugPrint(
-      'Loaded machines: ${machines.map((m) => m.name).toList()}',
-    );
-
-    emit(
-      state.copyWith(
-        isLoading: false,
-        machines: machines,
-        selectedMachine: machines.isNotEmpty ? machines.first : null,
-        clearError: true,
-      ),
-    );
-  } catch (e, stackTrace) {
-    debugPrint('Machine loading error: $e');
-    debugPrintStack(stackTrace: stackTrace);
-
-    emit(
-      state.copyWith(
-        isLoading: false,
-        errorMessage: 'Failed to load machines',
-      ),
-    );
-  }
-}
 
   void _onToggleExpanded(
     ToggleExpandedComposerEvent event,
@@ -264,11 +178,6 @@ Future<void> _onLoadMachines(
     );
 
     try {
-      // final response = await sendChatMessage(
-      //   message: text,
-      //   sessionId: state.sessionId,
-      // );
-
       final response = await sendChatMessage(
         message: text,
         sessionId: state.sessionId,
@@ -289,13 +198,63 @@ Future<void> _onLoadMachines(
       emit(
         state.copyWith(
           sessionId: state.sessionId ?? response.sessionId,
-          messages: [...state.messages, userMessage, aiMessage],
+          // messages: [...state.messages, userMessage, aiMessage],
+          messages: [...state.messages, aiMessage],
           isAiTyping: false,
           sessions: updatedSessions,
           showResolutionPrompt: true,
           isIssueResolved: false,
           clearError: true,
           isHistoryMode: false,
+        ),
+      );
+    } on ChatValidationException catch (e) {
+      final errorReply = ChatMessage(
+        id: DateTime.now().microsecondsSinceEpoch.toString(),
+        isUser: false,
+        text: e.message,
+        time: 'Now',
+      );
+
+      emit(
+        state.copyWith(
+          messages: [...state.messages, errorReply],
+          isAiTyping: false,
+          showResolutionPrompt: false,
+          isIssueResolved: false,
+          clearError: true,
+        ),
+      );
+    } on DioException catch (e) {
+      final responseData = e.response?.data;
+
+      String message = 'Something went wrong. Please try again.';
+
+      if (responseData is Map<String, dynamic>) {
+        message =
+            responseData['error']?.toString() ??
+            responseData['message']?.toString() ??
+            message;
+      } else if (responseData is Map) {
+        final data = Map<String, dynamic>.from(responseData);
+
+        message =
+            data['error']?.toString() ?? data['message']?.toString() ?? message;
+      }
+
+      final errorReply = ChatMessage(
+        id: DateTime.now().microsecondsSinceEpoch.toString(),
+        isUser: false,
+        text: message,
+        time: 'Now',
+      );
+
+      emit(
+        state.copyWith(
+          messages: [...state.messages, errorReply],
+          isAiTyping: false,
+          errorMessage: message,
+          showResolutionPrompt: false,
         ),
       );
     } catch (e) {
@@ -308,9 +267,10 @@ Future<void> _onLoadMachines(
 
       emit(
         state.copyWith(
-          messages: [...state.messages, userMessage, errorReply],
+          messages: [...state.messages, errorReply],
           isAiTyping: false,
           errorMessage: 'Failed to send message',
+          showResolutionPrompt: false,
         ),
       );
     }
@@ -329,25 +289,6 @@ Future<void> _onLoadMachines(
 
     emit(state.copyWith(messages: updatedMessages, clearError: true));
   }
-
-  //   void _onStartNewChat(
-  //   StartNewChatEvent event,
-  //   Emitter<AssistantChatState> emit,
-  // ) {
-  //   emit(
-  //     AssistantChatState(
-  //       machines: state.machines,
-  //       selectedMachine: state.machines.isNotEmpty ? state.machines.first : null,
-  //       sessions: state.sessions,
-  //       isSessionLoading: state.isSessionLoading,
-  //       showResolutionPrompt: false,
-  //       isIssueResolved: false,
-  //       isExpanded: false,
-  //       isAiTyping: false,
-  //       sessionId: null,
-  //     ),
-  //   );
-  // }
 
   void _onStartNewChat(
     StartNewChatEvent event,
@@ -372,111 +313,154 @@ Future<void> _onLoadMachines(
   }
 
   Future<void> _onLoadSessions(
-  LoadSessionsEvent event,
-  Emitter<AssistantChatState> emit,
-) async {
-  if (state.isSessionLoading) return;
+    LoadSessionsEvent event,
+    Emitter<AssistantChatState> emit,
+  ) async {
+    if (state.isSessionLoading) return;
 
-  emit(
-    state.copyWith(
-      isSessionLoading: true,
-      clearError: true,
-    ),
-  );
+    emit(state.copyWith(isSessionLoading: true, clearError: true));
 
-  try {
-    final sessions = await getSessions();
+    try {
+      final sessions = await getSessions();
 
+      emit(
+        state.copyWith(
+          isSessionLoading: false,
+          sessions: sessions,
+          clearError: true,
+        ),
+      );
+    } catch (e) {
+      emit(
+        state.copyWith(
+          isSessionLoading: false,
+          errorMessage: 'Failed to load issue history',
+        ),
+      );
+    }
+  }
+
+  Future<void> _onSubmitFeedback(
+    SubmitFeedbackEvent event,
+    Emitter<AssistantChatState> emit,
+  ) async {
+    try {
+      if (state.sessionId == null) return;
+      if (state.messages.length < 2) return;
+
+      final actualUserMessages = state.messages
+          .where((message) => message.isUser && message.id != 'welcome-user')
+          .toList();
+
+      if (actualUserMessages.isEmpty) {
+        emit(state.copyWith(errorMessage: 'No issue message found'));
+        return;
+      }
+
+      final actualUserMessage = actualUserMessages.last;
+
+      final aiMessages = state.messages
+          .where((message) => !message.isUser && message.id != 'welcome-ai')
+          .toList();
+
+      if (aiMessages.isEmpty) {
+        emit(state.copyWith(errorMessage: 'No AI response found'));
+        return;
+      }
+
+      final lastAiMessage = aiMessages.last;
+      final conversation = state.messages
+          .where((m) => m.id != 'welcome-ai')
+          .where((m) => m.id != 'welcome-user')
+          .map(
+            (m) => FeedbackConversationMessage(
+              role: m.isUser ? 'user' : 'assistant',
+              content: m.isUser ? _extractIssueText(m.text) : m.text,
+            ),
+          )
+          .toList();
+
+      await submitFeedback(
+        FeedbackRequest(
+          sessionId: state.sessionId!,
+          question: _extractIssueText(actualUserMessage.text),
+          answer: lastAiMessage.text,
+          engineerFeedback: event.resolved ? 'correct' : 'incorrect',
+          conversation: conversation,
+        ),
+      );
+
+      emit(
+        state.copyWith(
+          isIssueResolved: event.resolved,
+          showResolutionPrompt: false,
+          isExpanded: false,
+          clearError: true,
+        ),
+      );
+    } catch (e, stackTrace) {
+      debugPrint('Submit feedback failed: $e');
+      debugPrintStack(stackTrace: stackTrace);
+
+      emit(state.copyWith(errorMessage: 'Failed to submit feedback'));
+    }
+  }
+
+  Future<void> _onLoadSessionMessages(
+    LoadSessionMessagesEvent event,
+    Emitter<AssistantChatState> emit,
+  ) async {
     emit(
       state.copyWith(
-        isSessionLoading: false,
-        sessions: sessions,
+        isAiTyping: true,
+        isIssueResolved: false,
+        showResolutionPrompt: false,
         clearError: true,
       ),
     );
-  } catch (e) {
-    emit(
-      state.copyWith(
-        isSessionLoading: false,
-        errorMessage: 'Failed to load issue history',
-      ),
-    );
+
+    try {
+      final messages = await getSessionMessages(event.sessionId);
+
+      emit(
+        state.copyWith(
+          sessionId: event.sessionId,
+          messages: messages,
+          isExpanded: false,
+          isAiTyping: false,
+
+          // Important: never inherit resolved state from previous chat.
+          isIssueResolved: false,
+          showResolutionPrompt: false,
+
+          clearError: true,
+          isHistoryMode: true,
+        ),
+      );
+    } catch (e, stackTrace) {
+      debugPrint('Failed to load chat messages: $e');
+      debugPrintStack(stackTrace: stackTrace);
+
+      emit(
+        state.copyWith(
+          isAiTyping: false,
+          isIssueResolved: false,
+          showResolutionPrompt: false,
+          errorMessage: 'Failed to load chat messages',
+        ),
+      );
+    }
   }
-}
 
-//   Future<void> _onLoadSessionMessages(
-//     LoadSessionMessagesEvent event,
-//     Emitter<AssistantChatState> emit,
-//   ) async {
-//     emit(state.copyWith(isAiTyping: true, clearError: true));
+  String _extractIssueText(String text) {
+    const issueMarker = 'Issue:';
 
-//     try {
-//       final messages = await getSessionMessages(event.sessionId);
+    if (text.contains(issueMarker)) {
+      return text
+          .substring(text.indexOf(issueMarker) + issueMarker.length)
+          .trim();
+    }
 
-//       emit(
-//         state.copyWith(
-//           sessionId: event.sessionId,
-//           messages: messages,
-//           isExpanded: false,
-//           isAiTyping: false,
-//           clearError: true,
-//           isHistoryMode: true,
-//         ),
-//       );
-//     } catch (_) {
-//       emit(
-//         state.copyWith(
-//           isAiTyping: false,
-//           errorMessage: 'Failed to load chat messages',
-//         ),
-//       );
-//     }
-//   }
-// }
-
-Future<void> _onLoadSessionMessages(
-  LoadSessionMessagesEvent event,
-  Emitter<AssistantChatState> emit,
-) async {
-  emit(
-    state.copyWith(
-      isAiTyping: true,
-      isIssueResolved: false,
-      showResolutionPrompt: false,
-      clearError: true,
-    ),
-  );
-
-  try {
-    final messages = await getSessionMessages(event.sessionId);
-
-    emit(
-      state.copyWith(
-        sessionId: event.sessionId,
-        messages: messages,
-        isExpanded: false,
-        isAiTyping: false,
-
-        // Important: never inherit resolved state from previous chat.
-        isIssueResolved: false,
-        showResolutionPrompt: false,
-
-        clearError: true,
-        isHistoryMode: true,
-      ),
-    );
-  } catch (e, stackTrace) {
-    debugPrint('Failed to load chat messages: $e');
-    debugPrintStack(stackTrace: stackTrace);
-
-    emit(
-      state.copyWith(
-        isAiTyping: false,
-        isIssueResolved: false,
-        showResolutionPrompt: false,
-        errorMessage: 'Failed to load chat messages',
-      ),
-    );
+    return text.trim();
   }
-}
 }

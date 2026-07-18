@@ -37,54 +37,117 @@ class NotificationBootstrap {
 
     await _service!.initialize();
 
+    // final initialPayload = await _service!.getInitialPayload();
+
+    // if (initialPayload != null) {
+    //   _pendingPayload = initialPayload;
+    //   _tryOpenPendingPayload();
+    // }
     final initialPayload = await _service!.getInitialPayload();
 
     if (initialPayload != null) {
+      debugPrint('Stored initial notification payload: ${initialPayload.type}');
+
+      // Do not navigate yet. AuthPage is still changing routes.
       _pendingPayload = initialPayload;
-      _tryOpenPendingPayload();
     }
   }
 
+  static void openPendingNotificationAfterNavigation() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      Future<void>.delayed(const Duration(milliseconds: 350), () {
+        debugPrint('Trying to open pending notification after app navigation');
+
+        _tryOpenPendingPayload();
+      });
+    });
+  }
+
   static void _handlePayload(NotificationPayload payload) {
+    debugPrint('Notification tapped: ${payload.type}');
+
     _pendingPayload = payload;
     _tryOpenPendingPayload();
   }
 
-  static void _tryOpenPendingPayload() {
-    final payload = _pendingPayload;
-    final navigator = AppNavigator.key.currentState;
+  // static void _tryOpenPendingPayload() {
+  //   final payload = _pendingPayload;
+  //   final navigator = AppNavigator.key.currentState;
 
-    if (payload == null || navigator == null) {
-      return;
-    }
+  //   if (payload == null || navigator == null) {
+  //     return;
+  //   }
 
-    if (payload.type != 'feedback_approved' &&
-        payload.type != 'feedback_rejected') {
-      return;
-    }
-    debugPrint('========== OPENING NOTIFICATION ==========');
-    debugPrint('Type: ${payload.type}');
-    debugPrint('Notification ID: ${payload.notificationId}');
-    debugPrint('Feedback ID: ${payload.feedbackId}');
-    debugPrint('Session ID: ${payload.sessionId}');
-    debugPrint('Opening NotificationDetailsPage');
+  //   if (payload.type != 'feedback_approved' &&
+  //       payload.type != 'feedback_rejected') {
+  //     return;
+  //   }
+  //   debugPrint('========== OPENING NOTIFICATION ==========');
+  //   debugPrint('Type: ${payload.type}');
+  //   debugPrint('Notification ID: ${payload.notificationId}');
+  //   debugPrint('Feedback ID: ${payload.feedbackId}');
+  //   debugPrint('Session ID: ${payload.sessionId}');
+  //   debugPrint('Opening NotificationDetailsPage');
 
-    _pendingPayload = null;
+  //   _pendingPayload = null;
 
-    navigator.push(
-      MaterialPageRoute(
-        builder: (_) => NotificationDetailsPage(
-          notificationId: payload.notificationId,
-          feedbackId: payload.feedbackId,
-          sessionId: payload.sessionId,
-        ),
-      ),
-    );
-  }
+  //   navigator.push(
+  //     MaterialPageRoute(
+  //       builder: (_) => NotificationDetailsPage(
+  //         notificationId: payload.notificationId,
+  //         feedbackId: payload.feedbackId,
+  //         sessionId: payload.sessionId,
+  //       ),
+  //     ),
+  //   );
+  // }
 
   static Future<void> unregisterOnLogout() async {
     await _service?.unregisterCurrentDevice();
     _service = null;
     _pendingPayload = null;
   }
+  static void _tryOpenPendingPayload() {
+  final payload = _pendingPayload;
+  final navigator = AppNavigator.key.currentState;
+
+  debugPrint('========== NOTIFICATION NAVIGATION ==========');
+  debugPrint('Payload available: ${payload != null}');
+  debugPrint('Navigator available: ${navigator != null}');
+  debugPrint('Type: ${payload?.type}');
+  debugPrint('Notification ID: ${payload?.notificationId}');
+  debugPrint('Feedback ID: ${payload?.feedbackId}');
+  debugPrint('Session ID: ${payload?.sessionId}');
+
+  if (payload == null || navigator == null) {
+    return;
+  }
+
+  if (payload.type != 'feedback_approved' &&
+      payload.type != 'feedback_rejected') {
+    debugPrint('Unsupported notification type: ${payload.type}');
+    _pendingPayload = null;
+    return;
+  }
+
+  if (payload.notificationId == null ||
+      payload.notificationId!.isEmpty) {
+    debugPrint('Notification ID is unavailable');
+    return;
+  }
+
+  _pendingPayload = null;
+
+  debugPrint('Opening NotificationDetailsPage');
+
+  navigator.push(
+    MaterialPageRoute(
+      builder: (_) => NotificationDetailsPage(
+        notificationId: payload.notificationId,
+        feedbackId: payload.feedbackId,
+        sessionId: payload.sessionId,
+      ),
+    ),
+  );
+}
 }
