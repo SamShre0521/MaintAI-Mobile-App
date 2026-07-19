@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:maintai/ApiClient.dart';
 import 'package:maintai/domain/repositories/notificationrepo.dart';
-import 'package:maintai/presentation/pages/notification_details_page.dart';
 import 'package:maintai/presentation/widgets/notification_icon_button.dart';
 import 'package:maintai/storage/tokenStorage.dart';
+import 'package:maintai/presentation/pages/notifications_page.dart';
 
 class NotificationBellLoader extends StatefulWidget {
   const NotificationBellLoader({super.key});
@@ -55,18 +55,18 @@ class NotificationBellLoaderState
   Widget build(BuildContext context) {
     return NotificationBell(
       unreadCount: isLoading ? 0 : unreadCount,
-      onTap: () async {
-        await Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (_) => const NotificationDetailsPage(),
-          ),
-        );
+         onTap: () async {
+      await Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (_) => const NotificationsPage(),
+        ),
+      );
 
-        // Refresh after returning because some notifications
-        // may have been marked as read.
-        await loadUnreadCount();
-      },
+      if (!mounted) return;
+
+      await loadUnreadCount();
+    },
     );
   }
 }
