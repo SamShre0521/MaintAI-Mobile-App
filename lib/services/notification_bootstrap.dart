@@ -123,8 +123,14 @@ class NotificationBootstrap {
     return;
   }
 
-  if (payload.type != 'feedback_approved' &&
-      payload.type != 'feedback_rejected') {
+  final supportedTypes = {
+    'feedback_approved',
+    'feedback_rejected',
+    'feedback_submitted',
+    'feedback_resubmitted',
+  };
+
+  if (!supportedTypes.contains(payload.type)) {
     debugPrint('Unsupported notification type: ${payload.type}');
     _pendingPayload = null;
     return;
@@ -138,7 +144,24 @@ class NotificationBootstrap {
 
   _pendingPayload = null;
 
-  debugPrint('Opening NotificationDetailsPage');
+  if (payload.type == 'feedback_submitted' ||
+      payload.type == 'feedback_resubmitted') {
+    debugPrint('Opening manager notification details');
+
+    navigator.push(
+      MaterialPageRoute(
+        builder: (_) => NotificationDetailsPage(
+          notificationId: payload.notificationId,
+          feedbackId: payload.feedbackId,
+          sessionId: payload.sessionId,
+        ),
+      ),
+    );
+
+    return;
+  }
+
+  debugPrint('Opening employee notification details');
 
   navigator.push(
     MaterialPageRoute(

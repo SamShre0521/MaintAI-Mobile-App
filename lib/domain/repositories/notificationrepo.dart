@@ -23,27 +23,27 @@ class NotificationRepository {
   Future<int> getUnreadCount() async {
     final response = await apiClient.dio.get('/notifications/unread-count');
 
-    return (response.data['count'] as num?)?.toInt() ?? 0;
+    return (response.data['unreadCount'] as num?)?.toInt() ?? 0;
+  }
+
+  Future<void> markAllAsRead() async {
+    await apiClient.dio.patch('/notifications/read-all');
   }
 
   Future<List<UserNotification>> getNotifications() async {
     final response = await apiClient.dio.get('/notifications');
 
-    final rawList = response.data['notifications'];
+    final dynamic rawNotifications = response.data['notifications'];
 
-    if (rawList is! List) {
+    if (rawNotifications is! List) {
       return [];
     }
 
-    return rawList
+    return rawNotifications
         .whereType<Map>()
         .map(
           (item) => UserNotification.fromJson(Map<String, dynamic>.from(item)),
         )
         .toList();
-  }
-
-  Future<void> markAllAsRead() async {
-    await apiClient.dio.patch('/notifications/read-all');
   }
 }

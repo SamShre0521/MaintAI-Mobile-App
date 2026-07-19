@@ -15,6 +15,7 @@ import 'package:maintai/presentation/pages/app_sidebar.dart';
 import 'package:maintai/presentation/pages/auth.dart';
 import 'package:maintai/presentation/pages/manager_review_issue.dart';
 import 'package:maintai/presentation/pages/upload_machines_document.dart';
+import 'package:maintai/presentation/widgets/notification_bell_loader.dart';
 import 'package:maintai/services/notification_bootstrap.dart';
 import 'package:maintai/storage/tokenStorage.dart';
 import 'package:maintai/domain/usecase/getMachines.dart';
@@ -182,6 +183,12 @@ class ManagerDashboardPage extends StatelessWidget {
                 ),
               ],
             ),
+            actions: [
+              Padding(
+                padding: const EdgeInsets.only(right: 12),
+                child: NotificationBellLoader(),
+              ),
+            ],
           ),
           body: state.isLoading
               ? const Center(

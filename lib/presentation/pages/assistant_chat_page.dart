@@ -17,6 +17,7 @@ import 'package:maintai/presentation/pages/app_sidebar.dart';
 import 'package:maintai/presentation/pages/manager_dashboard.dart';
 import 'package:maintai/presentation/pages/upload_machines_document.dart';
 import 'package:maintai/presentation/widgets/animated_message_wrapper.dart';
+import 'package:maintai/presentation/widgets/notification_bell_loader.dart';
 import 'package:maintai/presentation/widgets/typing_bubble_widget.dart';
 import 'package:maintai/presentation/widgets/welcome_widget.dart';
 import 'package:maintai/presentation/widgets/user_message_bubble.dart';
@@ -65,8 +66,7 @@ class _AssistantChatPageState extends State<AssistantChatPage> {
       if (bloc.state.sessions.isEmpty && !bloc.state.isSessionLoading) {
         bloc.add(LoadSessionsEvent());
       }
-      NotificationBootstrap
-        .openPendingNotificationAfterNavigation();
+      NotificationBootstrap.openPendingNotificationAfterNavigation();
     });
   }
 
@@ -275,13 +275,17 @@ class _AssistantChatPageState extends State<AssistantChatPage> {
               ),
             ),
             actions: [
-              IconButton(
-                onPressed: () {},
-                icon: const Icon(
-                  Icons.notifications_none_rounded,
-                  color: Color(0xFF2E2E2E),
-                  size: 28,
-                ),
+              // IconButton(
+              //   onPressed: () {},
+              //   icon: const Icon(
+              //     Icons.notifications_none_rounded,
+              //     color: Color(0xFF2E2E2E),
+              //     size: 28,
+              //   ),
+              // ),
+              Padding(
+                padding: EdgeInsets.only(right: 10),
+                child: NotificationBellLoader(),
               ),
             ],
           ),

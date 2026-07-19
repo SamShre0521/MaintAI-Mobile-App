@@ -1,49 +1,56 @@
 import 'package:flutter/material.dart';
 
-class NotificationIconButton extends StatelessWidget {
+class NotificationBell extends StatelessWidget {
   final int unreadCount;
-  final VoidCallback onPressed;
+  final VoidCallback onTap;
 
-  const NotificationIconButton({
+  const NotificationBell({
     super.key,
     required this.unreadCount,
-    required this.onPressed,
+    required this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
     return IconButton(
-      onPressed: onPressed,
+      onPressed: onTap,
+      tooltip: 'Notifications',
       icon: Stack(
         clipBehavior: Clip.none,
         children: [
           const Icon(
             Icons.notifications_none_rounded,
-            color: Color(0xFF2E2E2E),
-            size: 28,
+            size: 29,
+            color: Color(0xFF111827),
           ),
+
           if (unreadCount > 0)
             Positioned(
               right: -7,
               top: -7,
               child: Container(
                 constraints: const BoxConstraints(
-                  minWidth: 18,
-                  minHeight: 18,
+                  minWidth: 19,
+                  minHeight: 19,
                 ),
                 padding: const EdgeInsets.symmetric(
-                  horizontal: 4,
+                  horizontal: 5,
+                  vertical: 2,
                 ),
-                decoration: const BoxDecoration(
-                  color: Color(0xFFDC2626),
-                  shape: BoxShape.circle,
+                decoration: BoxDecoration(
+                  color: const Color(0xFFDC2626),
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(
+                    color: const Color(0xFFF8F6F1),
+                    width: 2,
+                  ),
                 ),
                 alignment: Alignment.center,
                 child: Text(
-                  unreadCount > 9 ? '9+' : '$unreadCount',
+                  unreadCount > 99 ? '99+' : unreadCount.toString(),
                   style: const TextStyle(
                     color: Colors.white,
-                    fontSize: 9,
+                    fontSize: 10,
                     fontWeight: FontWeight.w900,
                   ),
                 ),
