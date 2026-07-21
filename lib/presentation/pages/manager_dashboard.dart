@@ -1,7 +1,9 @@
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:maintai/ApiClient.dart';
 import 'package:maintai/domain/entities/feedback_isssues.dart';
+import 'package:maintai/domain/repositories/feedback_details_repository.dart';
 import 'package:maintai/domain/repositories/impl/assistantrepoimpl.dart';
 import 'package:maintai/domain/repositories/impl/authrepoimpl.dart';
 import 'package:maintai/domain/repositories/impl/feedbackrepoimpl.dart';
@@ -13,6 +15,7 @@ import 'package:maintai/presentation/bloc/manager_dashboard_event.dart';
 import 'package:maintai/presentation/bloc/manager_dashboard_state.dart';
 import 'package:maintai/presentation/pages/app_sidebar.dart';
 import 'package:maintai/presentation/pages/auth.dart';
+import 'package:maintai/presentation/pages/feedback_details_page.dart';
 import 'package:maintai/presentation/pages/manager_review_issue.dart';
 import 'package:maintai/presentation/pages/upload_machines_document.dart';
 import 'package:maintai/presentation/widgets/notification_bell_loader.dart';
@@ -26,6 +29,83 @@ import 'package:maintai/presentation/bloc/assitant_chat_bloc.dart';
 import 'package:maintai/presentation/bloc/assistant_chat_event.dart';
 import 'package:maintai/presentation/pages/assistant_chat_page.dart';
 import 'package:maintai/presentation/pages/manager_cases_page.dart';
+
+Future<void> _openManagerIssueHistory(
+  BuildContext context,
+  String sessionId,
+) async {
+  // Close the sidebar first.
+  Navigator.of(context).pop();
+
+  final tokenStorage = TokenStorage();
+  final apiClient = ApiClient(tokenStorage);
+
+  final feedbackRepository = FeedbackDetailsRepository(apiClient);
+
+  try {
+    final feedback = await feedbackRepository.getBySessionId(sessionId);
+
+    if (!context.mounted) return;
+
+    if (feedback != null) {
+      await Navigator.of(context).push(
+        MaterialPageRoute(
+          builder: (_) => FeedbackDetailsPage(feedback: feedback),
+        ),
+      );
+
+      return;
+    }
+
+    // No submitted feedback exists.
+    // Open the normal chat-history page.
+    final assistantRepository = AssistantRepositoryImpl(apiClient);
+    final mobileFeedbackRepository = feedbackrepoimpl(apiClient: apiClient);
+
+    final submitFeedback = SubmitFeedback(
+      feedbackrepository: mobileFeedbackRepository,
+    );
+
+    await Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => BlocProvider(
+          create: (_) =>
+              AssistantChatBloc(
+                  getMachines: GetMachines(assistantRepository),
+                  sendChatMessage: SendChatMessage(assistantRepository),
+                  getSessions: GetSessions(assistantRepository),
+                  getSessionMessages: GetSessionMessages(assistantRepository),
+                  submitFeedback: submitFeedback,
+                )
+                ..add(LoadMachinesEvent())
+                ..add(LoadSessionsEvent())
+                ..add(LoadSessionMessagesEvent(sessionId)),
+          child: const AssistantChatPage(),
+        ),
+      ),
+    );
+  } on DioException catch (e) {
+    debugPrint(
+      'Issue-history request failed: '
+      '${e.response?.statusCode} ${e.response?.data}',
+    );
+
+    if (!context.mounted) return;
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Could not load issue details.')),
+    );
+  } catch (e, stackTrace) {
+    debugPrint('Failed to open manager issue history: $e');
+    debugPrintStack(stackTrace: stackTrace);
+
+    if (!context.mounted) return;
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Could not load issue details.')),
+    );
+  }
+}
 
 class ManagerDashboardPage extends StatelessWidget {
   const ManagerDashboardPage({super.key});
@@ -98,11 +178,14 @@ class ManagerDashboardPage extends StatelessWidget {
               );
             },
 
+            // onSelectHistory: (sessionId) {
+            //   Navigator.of(context).pop();
+            //   context.read<AssistantChatBloc>().add(
+            //     LoadSessionMessagesEvent(sessionId),
+            //   );
+            // },
             onSelectHistory: (sessionId) {
-              Navigator.of(context).pop();
-              context.read<AssistantChatBloc>().add(
-                LoadSessionMessagesEvent(sessionId),
-              );
+              _openManagerIssueHistory(context, sessionId);
             },
             onMachines: () {
               Navigator.pop(context);
@@ -366,10 +449,9 @@ class ManagerDashboardPage extends StatelessWidget {
                     icon: Icons.logout_rounded,
                     label: 'Logout',
                     onTap: () async {
-                                            await NotificationBootstrap.unregisterOnLogout();
+                      await NotificationBootstrap.unregisterOnLogout();
 
                       await TokenStorage().clearToken();
-
 
                       if (!context.mounted) return;
 

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:maintai/domain/entities/chat_message.dart';
+import 'package:maintai/domain/repositories/feedback_details_repository.dart';
 import 'package:maintai/domain/repositories/impl/assistantrepoimpl.dart';
 import 'package:maintai/domain/repositories/impl/managerrepoimpl.dart';
 import 'package:maintai/domain/usecase/approve_Feedback.dart';
@@ -14,6 +15,7 @@ import 'package:maintai/presentation/bloc/assitant_chat_bloc.dart';
 import 'package:maintai/presentation/bloc/manager_dashboard_bloc.dart';
 import 'package:maintai/presentation/bloc/manager_dashboard_event.dart';
 import 'package:maintai/presentation/pages/app_sidebar.dart';
+import 'package:maintai/presentation/pages/feedback_details_page.dart';
 import 'package:maintai/presentation/pages/manager_dashboard.dart';
 import 'package:maintai/presentation/pages/upload_machines_document.dart';
 import 'package:maintai/presentation/widgets/animated_message_wrapper.dart';
@@ -45,15 +47,19 @@ class AssistantChatPage extends StatefulWidget {
 class _AssistantChatPageState extends State<AssistantChatPage> {
   final TextEditingController issueController = TextEditingController();
   final ScrollController scrollController = ScrollController();
+  late final FeedbackDetailsRepository feedbackDetailsRepository;
 
   String userName = '';
   String userRole = '';
+  bool isOpeningHistory = false;
 
   @override
   void initState() {
     super.initState();
     _loadUserInfo();
-
+    feedbackDetailsRepository = FeedbackDetailsRepository(
+      ApiClient(TokenStorage()),
+    );
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
 
@@ -95,6 +101,78 @@ class _AssistantChatPageState extends State<AssistantChatPage> {
       userName = name ?? '';
       userRole = role ?? '';
     });
+  }
+
+  Future<void> _openIssueHistory(String sessionId) async {
+    if (isOpeningHistory) {
+      return;
+    }
+
+    setState(() {
+      isOpeningHistory = true;
+    });
+
+    // Close sidebar drawer.
+    Navigator.of(context).pop();
+
+    try {
+      final feedback = await feedbackDetailsRepository.getBySessionId(
+        sessionId,
+      );
+
+      if (!mounted) return;
+
+      if (feedback != null) {
+        final result = await Navigator.of(context).push<bool>(
+          MaterialPageRoute(
+            builder: (_) => FeedbackDetailsPage(feedback: feedback),
+          ),
+        );
+
+        if (!mounted) return;
+
+        if (result == true) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Solution resubmitted for manager review'),
+            ),
+          );
+
+          context.read<AssistantChatBloc>().add(LoadSessionsEvent());
+        }
+
+        return;
+      }
+
+      // No feedback was submitted for this session.
+      // Open the existing chat-history view.
+      context.read<AssistantChatBloc>().add(
+        LoadSessionMessagesEvent(sessionId),
+      );
+    } catch (e, stackTrace) {
+      debugPrint('Failed to open issue history: $e');
+      debugPrintStack(stackTrace: stackTrace);
+
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Could not load submission details. Opening chat history.',
+          ),
+        ),
+      );
+
+      context.read<AssistantChatBloc>().add(
+        LoadSessionMessagesEvent(sessionId),
+      );
+    } finally {
+      if (mounted) {
+        setState(() {
+          isOpeningHistory = false;
+        });
+      }
+    }
   }
 
   @override
@@ -199,12 +277,13 @@ class _AssistantChatPageState extends State<AssistantChatPage> {
                   }
                 : null,
 
-            onSelectHistory: (sessionId) {
-              Navigator.of(context).pop();
-              context.read<AssistantChatBloc>().add(
-                LoadSessionMessagesEvent(sessionId),
-              );
-            },
+            // onSelectHistory: (sessionId) {
+            //   Navigator.of(context).pop();
+            //   context.read<AssistantChatBloc>().add(
+            //     LoadSessionMessagesEvent(sessionId),
+            //   );
+            // },
+            onSelectHistory: _openIssueHistory,
 
             onMachines: () {
               Navigator.of(context).pop();
