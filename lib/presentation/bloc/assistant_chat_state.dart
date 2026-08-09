@@ -1,6 +1,7 @@
 import 'package:maintai/domain/entities/chat_message.dart';
 import 'package:maintai/domain/entities/machines.dart';
 import 'package:maintai/domain/entities/chat_session.dart';
+import 'package:maintai/domain/entities/pending_chat_attachment.dart';
 
 class AssistantChatState {
   final bool isLoading;
@@ -9,7 +10,9 @@ class AssistantChatState {
   final String? sessionId;
   final List<Machines> machines;
   final Machines? selectedMachine;
-  final String? imageName;
+
+  final List<PendingChatAttachment> selectedAttachments;
+
   final String? errorMessage;
   final List<ChatMessage> messages;
   final bool isSessionLoading;
@@ -25,7 +28,7 @@ class AssistantChatState {
     this.sessionId,
     this.machines = const [],
     this.selectedMachine,
-    this.imageName,
+    this.selectedAttachments = const [],
     this.errorMessage,
     this.showResolutionPrompt = false,
     this.isHistoryMode = false,
@@ -34,7 +37,8 @@ class AssistantChatState {
       ChatMessage(
         id: 'welcome-user',
         isUser: true,
-        text: "Hello! I'm having an issue with one of the machines.",
+        text:
+            "Hello! I'm having an issue with one of the machines.",
         time: '6:33 PM',
       ),
       ChatMessage(
@@ -56,10 +60,10 @@ class AssistantChatState {
     String? sessionId,
     List<Machines>? machines,
     Machines? selectedMachine,
-    String? imageName,
+    List<PendingChatAttachment>? selectedAttachments,
     String? errorMessage,
     List<ChatMessage>? messages,
-    bool clearImage = false,
+    bool clearSelectedAttachments = false,
     bool clearError = false,
     bool? isSessionLoading,
     List<ChatSession>? sessions,
@@ -68,20 +72,53 @@ class AssistantChatState {
     bool? isHistoryMode,
   }) {
     return AssistantChatState(
-      isLoading: isLoading ?? this.isLoading,
-      isExpanded: isExpanded ?? this.isExpanded,
-      isAiTyping: isAiTyping ?? this.isAiTyping,
-      sessionId: sessionId ?? this.sessionId,
-      machines: machines ?? this.machines,
-      selectedMachine: selectedMachine ?? this.selectedMachine,
-      imageName: clearImage ? null : (imageName ?? this.imageName),
-      errorMessage: clearError ? null : (errorMessage ?? this.errorMessage),
-      messages: messages ?? this.messages,
-      isSessionLoading: isSessionLoading ?? this.isSessionLoading,
-      sessions: sessions ?? this.sessions,
-      showResolutionPrompt: showResolutionPrompt ?? this.showResolutionPrompt,
-      isIssueResolved: isIssueResolved ?? this.isIssueResolved,
-      isHistoryMode: isHistoryMode ?? this.isHistoryMode,
+      isLoading:
+          isLoading ?? this.isLoading,
+      isExpanded:
+          isExpanded ?? this.isExpanded,
+      isAiTyping:
+          isAiTyping ?? this.isAiTyping,
+      sessionId:
+          sessionId ?? this.sessionId,
+      machines:
+          machines ?? this.machines,
+      selectedMachine:
+          selectedMachine ??
+          this.selectedMachine,
+
+      selectedAttachments:
+          clearSelectedAttachments
+              ? const []
+              : selectedAttachments ??
+                  this.selectedAttachments,
+
+      errorMessage:
+          clearError
+              ? null
+              : errorMessage ??
+                  this.errorMessage,
+
+      messages:
+          messages ?? this.messages,
+
+      isSessionLoading:
+          isSessionLoading ??
+          this.isSessionLoading,
+
+      sessions:
+          sessions ?? this.sessions,
+
+      showResolutionPrompt:
+          showResolutionPrompt ??
+          this.showResolutionPrompt,
+
+      isIssueResolved:
+          isIssueResolved ??
+          this.isIssueResolved,
+
+      isHistoryMode:
+          isHistoryMode ??
+          this.isHistoryMode,
     );
   }
 }

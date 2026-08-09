@@ -1,4 +1,5 @@
 import 'package:maintai/domain/entities/chat_response.dart';
+import 'package:maintai/domain/entities/pending_chat_attachment.dart';
 import 'package:maintai/domain/repositories/assistantrepo.dart';
 
 class SendChatMessage {
@@ -10,11 +11,13 @@ class SendChatMessage {
     required String message,
     String? sessionId,
     String? machineId,
+    List<PendingChatAttachment> attachments = const [],
   }) {
     return repository.sendMessage(
       message: message,
       sessionId: sessionId,
       machineId: machineId,
+      attachments: attachments,
     );
   }
 }
